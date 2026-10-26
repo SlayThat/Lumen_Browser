@@ -18,7 +18,13 @@ if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
   let Win;
-  const urlFromArgv = (argv) => argv.slice(1).find(a => /^https?:\/\//i.test(a));
+  const urlFromArgv = (argv) => {
+    for (const a of argv.slice(1)) {
+      if (/^https?:\/\//i.test(a)) return a;
+      if (/\.html?$/i.test(a) && !a.startsWith('-') && require('fs').existsSync(a)) return require('url').pathToFileURL(require('path').resolve(a)).href;
+    }
+    return undefined;
+  };
 
   app.on('second-instance', (e, argv) => {
     if (!Win) return;
@@ -48,6 +54,7 @@ if (!app.requestSingleInstanceLock()) {
       new Win({ url: argvUrl });
     }
 
+    setTimeout(() => require('./updater').check(false), 15000);
     setInterval(() => S.allWins().forEach(w => { if (!w.closed) w.sleepTick(); }), 60000);
     nativeTheme.on('updated', () => S.allWins().forEach(w => w.updateAppearance()));
   });

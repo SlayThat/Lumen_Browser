@@ -16,8 +16,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - run: npm run check
       - run: npm run dist
         env:
@@ -28,6 +27,7 @@ jobs:
           path: |
             dist/*.msi
             dist/*.exe
+            dist/latest.yml
       # Unsigned for now. After SignPath approval, add its signing step here
       # (signpath/github-action-submit-signing-request) before the release step.
       - name: Publish GitHub Release
@@ -37,3 +37,5 @@ jobs:
           files: |
             dist/*.msi
             dist/*.exe
+            dist/latest.yml
+            dist/*.blockmap
