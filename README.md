@@ -1,83 +1,71 @@
 # Lumen
 
-> **Note:** This build is currently unsigned. If Windows SmartScreen blocks the app, click 'More info' and then 'Run anyway'.
+A fast, simple web browser for Windows 10 and 11 with a **Liquid Glass** toolbar: the tabs and address bar are see-through glass that bends and blurs the page behind them.
 
-A Chromium-based browser (Electron) for Windows 10 and 11 with a Liquid Glass style toolbar, tab strip and menus.
-The glass is an approximation drawn by a WebGL2 shader. It is not Apple's shader.
+Lumen is built on Chromium (through Electron), so websites work the way they do in Chrome or Edge. It is free and open source (MIT licence).
 
-## Run it
+> **Note:** This build is currently unsigned. If Windows SmartScreen blocks the app, click **More info** and then **Run anyway**.
 
-1. Install Node.js 20 or newer.
-2. In this folder:
-   ```
-   npm install
-   npm start
-   ```
-3. Build an installer and a portable exe: `npm run dist` (output in `dist/`).
-4. `npm run check` syntax-checks every script.
+## Download and install
+
+1. Open the [Releases page](../../releases) and pick the newest version.
+2. Download one of:
+   - `Lumen-<version>-x64.exe`: the normal installer (recommended). It updates itself.
+   - `Lumen-<version>-x64.msi`: installer for IT admins. It does not update itself.
+   - `Lumen-<version>-portable.exe`: runs without installing. It does not update itself.
+3. Run it. If Windows shows a blue SmartScreen box, see the note above.
+
+To make Lumen your main browser, open Lumen, go to **Settings > General > Make default**, and choose Lumen in the Windows page that opens.
+
+## Features
+
+- Liquid Glass toolbar with three looks: Glass, Frosted (lighter on your graphics card) and Off. Change it in Settings.
+- Tabs you can drag to reorder, sleeping background tabs, and private windows.
+- One box for addresses and searches (DuckDuckGo by default, Google and Bing available).
+- Find in page, per-site zoom, bookmarks, history and downloads.
+- Privacy first: sites must ask before using your camera, microphone or location, and bad certificates are never accepted silently.
+
+## What is not here yet
+
+- No extensions. Chrome Web Store extensions do not work in Lumen.
+- No password manager, sync, ad blocker or import from other browsers.
+- No Netflix-style protected video (Widevine).
 
 ## Keyboard shortcuts
 
 | Action | Keys |
 |---|---|
 | New tab / close tab / reopen closed tab | Ctrl+T / Ctrl+W / Ctrl+Shift+T |
-| Next / previous tab | Ctrl+Tab / Ctrl+Shift+Tab (also Ctrl+PageDown / PageUp) |
+| Next / previous tab | Ctrl+Tab / Ctrl+Shift+Tab |
 | Jump to tab 1 to 8 / last tab | Ctrl+1 to 8 / Ctrl+9 |
-| Address bar | Ctrl+L, Alt+D, F6 |
+| Address bar | Ctrl+L |
 | Back / forward / home | Alt+Left / Alt+Right / Alt+Home |
-| Reload / hard reload | F5, Ctrl+R / Ctrl+Shift+R, Ctrl+F5 |
-| Find in page | Ctrl+F (Enter next, Shift+Enter previous) |
+| Reload / hard reload | F5 / Ctrl+Shift+R |
+| Find in page | Ctrl+F |
 | Bookmark page | Ctrl+D |
 | History / downloads / settings | Ctrl+H / Ctrl+J / Ctrl+, |
-| Zoom in / out / reset (per site) | Ctrl+= / Ctrl+- / Ctrl+0 |
+| Zoom in / out / reset | Ctrl+= / Ctrl+- / Ctrl+0 |
 | New window / private window | Ctrl+N / Ctrl+Shift+N |
-| Full screen / dev tools / print | F11 / F12 or Ctrl+Shift+I / Ctrl+P |
+| Full screen / developer tools | F11 / F12 |
 
-## How the glass works
+## If something looks wrong
 
-- The window holds one **page view** per tab and one transparent **UI view** on top.
-- By default the page starts **below** the toolbar, so fixed page headers (YouTube, Gmail) are never hidden. The glass samples the top of the page and mirrors it upward, so the toolbar still picks up the page's colors and changes as you scroll.
-- Settings has an experimental switch, "Let pages scroll under the toolbar". With it on, the page fills the whole window and the glass bends the real content behind it. Fixed headers will sit under the toolbar.
-- The main process captures that region with `capturePage`, halves its resolution, and sends it to the UI view. It captures about 15 times a second while the page changes, slows down when nothing changes, and pauses when the window is unfocused or minimized.
-- The UI view draws that frame in a WebGL2 shader inside each `[data-glass]` element: rounded-rectangle shape, edge refraction, small RGB dispersion at the rim, blur that is soft in the middle and sharp at the rim, saturation boost, a tint that adapts to the page brightness behind it, rim light, shadow and grain.
-- **Why the UI never blocks the page:** the UI view is only as tall as it needs to be. It is 92 px tall normally, grows for the find bar, suggestions and prompts, and covers the whole window only while a menu or panel is open. A page cannot be clicked in the top 92 px, because the toolbar is there.
-- Settings has three materials: Glass, Frosted (blur only, lighter on the GPU) and Off (solid surfaces). Lumen offers Frosted if drawing gets slow.
+- **The toolbar looks flat or slow:** Settings > Glass > Material > Frosted.
+- **The screen goes black for a few seconds:** this is usually a graphics driver reset. Lumen then turns Glass off until you restart it. Updating your graphics driver helps.
+- **Anything else:** please [open an issue](../../issues) and say what you did and what you saw. A screenshot helps.
 
-## Security
+## Build it yourself
 
-Every view runs with context isolation and the sandbox on, no Node, no `webview`. The UI preload exposes a whitelist of channels, and the main process checks that each message comes from the Lumen UI and validates every argument. Internal pages are served through `lumen://` with a strict Content-Security-Policy. Certificate errors show an error page and are never accepted silently. Permissions (camera, microphone, location, notifications, clipboard read, screen capture) ask first; everything else is denied.
+You need Windows 10 or 11 and Node.js 20 or newer.
 
-## Rename it
+```
+npm install
+npm start          # run Lumen
+npm run dist       # build the installer, MSI and portable exe into dist/
+```
 
-Edit `APP_NAME` in `src/main/config.js`, and `productName` in `package.json`.
+How it works inside, and notes for contributors, are in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). How releases are made is in [PUBLISHING.md](PUBLISHING.md).
 
-## Known limitations
+## Licence
 
-- Typed addresses without a scheme go to https. Pages reached by typing `http://` show "Not secure". There is no automatic http to https upgrade for links.
-- Pop-ups open as tabs only after a click or key press. Login flows that need `window.opener` (some OAuth pop-ups) will not work.
-- No extensions, no password manager, no sync, no Widevine DRM (Netflix and similar will not play).
-- Electron needs updating regularly to get Chromium security fixes. Do not use this for banking until you have a plan for that.
-- Capturing frames uses some GPU all the time the window is focused.
-
-## Not tested
-
-This was written without being able to run Windows or Electron. The places most likely to need a fix on first run:
-
-1. **Transparent UI view over the page.** If the toolbar shows a black or white box, the UI view is not transparent on your setup.
-2. **Window buttons.** The window is frameless with round close, minimize and maximize dots on the left. Set `NATIVE_CAPTION_BUTTONS` to `true` in `config.js` to use the system buttons on the right instead, which keeps the Windows 11 snap layouts flyout.
-3. **Window dragging** from the empty tab-row area (`-webkit-app-region: drag` inside a view).
-4. **Frame capture** (`capturePage` on the page view): if the glass stays flat, check the console for errors from `captureTick`.
-5. **The shader** on your GPU. Open the UI's developer tools by launching with `--remote-debugging-port=9222` and look for shader compile errors.
-
-Send any error message or screenshot back and it can be fixed.
-
-## If the screen goes black or flickers
-
-A black screen for a few seconds usually means the graphics driver reset. Lumen asks for the low-power GPU, captures the page at most about 8 times a second, and if Chromium's graphics process crashes it turns Glass off for that session (your saved setting is kept, so Glass comes back on the next start).
-To check for a driver reset, open Windows Event Viewer, then Windows Logs, then System, and look for "Display" errors around that time. To see Chromium's GPU log, run `npx electron . --enable-logging --log-file=lumen-gpu.log`.
-
-
-## Logo and releasing
-
-The logo lives in `build/logo.svg` (icons: `build/icon.ico`, `build/icon.png`; copies in `src/assets/`). `npm run dist` builds the installer and portable exe with it.
-See `PUBLISHING.md` for signing, updates and what a public release needs.
+MIT. See [LICENSE](LICENSE). Lumen includes Electron and Chromium, which have their own open-source licences.
