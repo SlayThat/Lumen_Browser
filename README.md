@@ -1,5 +1,7 @@
 # Lumen
 
+> **Note:** This build is currently unsigned. If Windows SmartScreen blocks the app, click 'More info' and then 'Run anyway'.
+
 A Chromium-based browser (Electron) for Windows 10 and 11 with a Liquid Glass style toolbar, tab strip and menus.
 The glass is an approximation drawn by a WebGL2 shader. It is not Apple's shader.
 
