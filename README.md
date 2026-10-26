@@ -5,7 +5,6 @@ The glass is an approximation drawn by a WebGL2 shader. It is not Apple's shader
 
 ## Run it
 
-Note: This build is currently unsigned. If Windows SmartScreen blocks the app, click 'More info' and then 'Run anyway'.
 1. Install Node.js 20 or newer.
 2. In this folder:
    ```

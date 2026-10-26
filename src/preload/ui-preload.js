@@ -4,7 +4,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 const SEND = new Set(['tab:new', 'tab:close', 'tab:activate', 'tab:move', 'tab:duplicate', 'tab:closeOthers', 'tab:reload',
   'cmd', 'navTo', 'nav:goto', 'find', 'find:stop', 'layout', 'window', 'focusPage', 'ctx:run', 'ctx:close', 'perm:answer',
-  'bookmarks:remove', 'history:remove', 'history:clear', 'download:act', 'downloads:clear', 'settings:set', 'data:clear', 'clipboard:copy']);
+  'bookmarks:remove', 'history:remove', 'history:clear', 'download:act', 'downloads:clear', 'settings:set', 'data:clear', 'clipboard:copy', 'app:defaultBrowser', 'app:checkUpdate']);
 const INVOKE = new Set(['nav:history', 'suggest', 'bookmarks:list', 'history:list', 'downloads:list', 'settings:get']);
 const RECEIVE = new Set(['state', 'frame', 'cmd', 'find:result', 'settings', 'downloads', 'perm:ask', 'ctx:show', 'toast']);
 

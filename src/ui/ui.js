@@ -679,6 +679,11 @@
     });
     return b;
   }
+  function actionButton(label, fn) {
+    const b = h('button', { class: 'btn', type: 'button', text: label });
+    b.addEventListener('click', fn);
+    return b;
+  }
   function renderSettings() {
     const body = $('sheetbody'); body.textContent = '';
     if (!settings) return;
@@ -700,6 +705,10 @@
           seg('searchEngine', [['duckduckgo', 'DuckDuckGo'], ['google', 'Google'], ['bing', 'Bing']], s.searchEngine)),
         h('div', { class: 'srow' }, h('div', { class: 'sl', text: 'Home page' }), homeInput),
         h('div', { class: 'srow' }, h('div', { class: 'sl', text: 'Theme' }), seg('theme', [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']], s.theme)),
+        h('div', { class: 'srow' }, h('div', { class: 'sl' }, 'Default browser', h('small', { text: 'Opens Windows Settings, where you choose Lumen for web links.' })),
+          actionButton('Make default', () => L.send('app:defaultBrowser'))),
+        h('div', { class: 'srow' }, h('div', { class: 'sl' }, 'Updates', h('small', { text: 'Lumen checks on its own at startup. Installed copies only.' })),
+          actionButton('Check now', () => L.send('app:checkUpdate'))),
         toggle('Restore tabs on launch', null, s.restoreSession, 'restoreSession'),
         h('div', { class: 'srow' }, h('div', { class: 'sl' }, 'Put background tabs to sleep after', h('small', { text: 'Sleeping tabs free their memory and reload when you open them.' })),
           seg('sleepMinutes', [[0, 'Never'], [10, '10 min'], [20, '20 min'], [60, '1 hour']], s.sleepMinutes))),

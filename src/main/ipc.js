@@ -1,7 +1,7 @@
 'use strict';
 // All IPC from the glass UI. Every message is checked: sender must be a Lumen UI view
 // showing lumen://app/, and every argument is validated before use.
-const { ipcMain, shell, session, clipboard } = require('electron');
+const { app, ipcMain, shell, session, clipboard } = require('electron');
 const S = require('./state');
 const C = require('./config');
 const { Win } = require('./win');
@@ -112,6 +112,13 @@ function register() {
     else if (o.action === 'remove') { S.downloads = S.downloads.filter(x => x !== d); S.broadcast('downloads', S.downloadSnapshot()); }
   });
   on('downloads:clear', () => { S.downloads = S.downloads.filter(d => d.state === 'progressing'); S.broadcast('downloads', S.downloadSnapshot()); });
+
+  // ---- default browser / updates ----
+  on('app:defaultBrowser', (w) => {
+    try { app.setAsDefaultProtocolClient('http'); app.setAsDefaultProtocolClient('https'); } catch (e) { /* the settings page still opens */ }
+    shell.openExternal('ms-settings:defaultapps').catch(() => w.toast('Open Windows Settings, then Default apps, and choose Lumen'));
+  });
+  on('app:checkUpdate', (w) => require('./updater').check(true));
 
   // ---- settings ----
   handle('settings:get', () => S.view());

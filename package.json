@@ -8,7 +8,7 @@
   "scripts": {
     "start": "electron .",
     "check": "node scripts/check.js",
-    "dist": "electron-builder --win nsis portable"
+    "dist": "electron-builder --win --publish never"
   },
   "devDependencies": {
     "electron": "^37.0.0",
@@ -40,7 +40,9 @@
       "installerIcon": "build/icon.ico",
       "uninstallerIcon": "build/icon.ico",
       "installerHeaderIcon": "build/icon.ico",
-      "shortcutName": "Lumen"
+      "shortcutName": "Lumen",
+      "include": "build/installer.nsh",
+      "perMachine": false
     },
     "portable": {
       "artifactName": "Lumen-${version}-portable.${ext}"
@@ -51,8 +53,23 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "runAfterFinish": false
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "SlayThat",
+        "repo": "Lumen_Browser"
+      }
+    ]
   },
-  "author": "Lumen",
-  "license": "UNLICENSED"
+  "author": "SlayThat",
+  "license": "MIT",
+  "homepage": "https://github.com/SlayThat/Lumen_Browser",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SlayThat/Lumen_Browser.git"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.0"
+  }
 }
