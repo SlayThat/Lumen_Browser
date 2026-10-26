@@ -1,0 +1,58 @@
+{
+  "name": "lumen-browser",
+  "productName": "Lumen",
+  "version": "0.1.0",
+  "description": "Lumen: a Chromium-based browser with a Liquid Glass style toolbar.",
+  "main": "src/main/main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "check": "node scripts/check.js",
+    "dist": "electron-builder --win nsis portable"
+  },
+  "devDependencies": {
+    "electron": "^37.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "dev.lumen.browser",
+    "productName": "Lumen",
+    "copyright": "Copyright (c) Lumen",
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "buildResources": "build"
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        "nsis",
+        "msi",
+        "portable"
+      ],
+      "artifactName": "Lumen-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "shortcutName": "Lumen"
+    },
+    "portable": {
+      "artifactName": "Lumen-${version}-portable.${ext}"
+    },
+    "msi": {
+      "oneClick": false,
+      "perMachine": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "runAfterFinish": false
+    }
+  },
+  "author": "Lumen",
+  "license": "UNLICENSED"
+}

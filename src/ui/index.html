@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src lumen://app; style-src lumen://app; img-src lumen://app data: https: http:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Lumen</title>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<canvas id="glass" aria-hidden="true"></canvas>
+<div id="scrim" hidden></div>
+
+<header id="top">
+  <div id="dragzone"></div>
+
+  <div id="row1">
+    <div id="dots" hidden></div>
+    <div id="tabstrip" data-glass="0.85">
+      <div id="tabs" role="tablist" aria-label="Open tabs"></div>
+      <button id="newtab" class="ib" type="button" aria-label="New tab" title="New tab (Ctrl+T)"></button>
+    </div>
+    <div id="capspace"></div>
+  </div>
+
+  <div id="row2">
+    <div id="toolbar" data-glass="1" role="toolbar" aria-label="Navigation">
+      <button id="back" class="ib" type="button" aria-label="Back" title="Back (Alt+Left). Hold for history"></button>
+      <button id="forward" class="ib" type="button" aria-label="Forward" title="Forward (Alt+Right). Hold for history"></button>
+      <button id="reload" class="ib" type="button" aria-label="Reload" title="Reload (F5)"></button>
+      <button id="home" class="ib" type="button" aria-label="Home" title="Home (Alt+Home)"></button>
+      <div id="addrwrap">
+        <span id="lock" aria-hidden="true"></span>
+        <div id="addrview" aria-hidden="true"></div>
+        <input id="addr" type="text" spellcheck="false" autocomplete="off" autocapitalize="off" role="combobox" aria-expanded="false" aria-controls="suggest" aria-label="Search or enter address" placeholder="Search or enter address">
+        <span id="zoomchip" hidden></span>
+        <div id="loadbar" hidden></div>
+      </div>
+      <button id="star" class="ib" type="button" aria-label="Bookmark this page" title="Bookmark (Ctrl+D)"></button>
+      <button id="menubtn" class="ib" type="button" aria-label="Menu" aria-haspopup="menu" title="Menu"></button>
+    </div>
+  </div>
+</header>
+
+<div id="findbar" class="pop" data-glass="0.7" hidden role="search" aria-label="Find in page">
+  <input id="findinput" type="text" spellcheck="false" autocomplete="off" placeholder="Find in page" aria-label="Find in page">
+  <span id="findcount" aria-live="polite"></span>
+  <button id="findcase" class="ib sm" type="button" aria-pressed="false" aria-label="Match case" title="Match case">Aa</button>
+  <button id="findprev" class="ib sm" type="button" aria-label="Previous match" title="Previous (Shift+Enter)"></button>
+  <button id="findnext" class="ib sm" type="button" aria-label="Next match" title="Next (Enter)"></button>
+  <button id="findclose" class="ib sm" type="button" aria-label="Close find" title="Close (Esc)"></button>
+</div>
+
+<div id="suggest" class="pop" data-glass="0.8" hidden role="listbox" aria-label="Suggestions"></div>
+
+<div id="perm" class="pop" data-glass="0.85" hidden role="alertdialog" aria-labelledby="permtext">
+  <div id="permtext"></div>
+  <label id="permremwrap"><input id="permrem" type="checkbox" checked> Remember my choice</label>
+  <div class="btnrow">
+    <button id="permblock" class="btn" type="button">Block</button>
+    <button id="permallow" class="btn primary" type="button">Allow</button>
+  </div>
+</div>
+
+<div id="perf" class="pop" data-glass="0.6" hidden role="status">
+  <span>Glass is running slowly on this PC.</span>
+  <button id="perfswitch" class="btn primary sm" type="button">Use Frosted</button>
+  <button id="perfdismiss" class="btn sm" type="button">Dismiss</button>
+</div>
+
+<div id="toast" class="pop" data-glass="0.5" hidden role="status" aria-live="polite"></div>
+
+<div id="menu" class="pop menu" data-glass="0.9" hidden role="menu" aria-label="Menu"></div>
+<div id="ctx" class="pop menu" data-glass="0.9" hidden role="menu" aria-label="Context menu"></div>
+<div id="navmenu" class="pop menu" data-glass="0.9" hidden role="menu" aria-label="History"></div>
+
+<section id="sheet" class="pop" data-glass="1" hidden role="dialog" aria-modal="true" aria-labelledby="sheettitle">
+  <div id="sheethead">
+    <h2 id="sheettitle"></h2>
+    <div id="sheettools"></div>
+    <button id="sheetclose" class="ib" type="button" aria-label="Close"></button>
+  </div>
+  <div id="sheetbody"></div>
+</section>
+
+<script src="icons.js"></script>
+<script src="glass.js"></script>
+<script src="ui.js"></script>
+</body>
+</html>
