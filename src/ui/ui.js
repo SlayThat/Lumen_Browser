@@ -256,42 +256,87 @@
   }
 
   // drag to reorder
+  // The dragged tab only moves with a transform while the pointer is down; the DOM order and the
+  // saved order change once, on drop. Listeners live on window, so losing pointer capture (which
+  // happens whenever a node is re-parented) can no longer leave a drag stuck.
+  let endDrag = null;
   function attachDrag(el, id) {
-    let d = null;
     el.addEventListener('pointerdown', (e) => {
       if (e.button !== 0 || e.target.closest('.tclose')) return;
-      d = { startX: e.clientX, active: false, startLeft: el.offsetLeft, pid: e.pointerId };
-    });
-    el.addEventListener('pointermove', (e) => {
-      if (!d) return;
-      const dx = e.clientX - d.startX;
-      if (!d.active) {
-        if (Math.abs(dx) < 5) return;
-        d.active = true; dragging = true; el.classList.add('dragging');
-        try { el.setPointerCapture(d.pid); } catch (err) { /* ignore */ }
-      }
+      if (endDrag) endDrag(false);
       const sibs = Array.from(tabsEl.children);
-      const w = el.offsetWidth;
-      let vis = el.offsetLeft + (dx - (el.offsetLeft - d.startLeft)) + w / 2;
-      const i = sibs.indexOf(el);
-      const prev = sibs[i - 1], next = sibs[i + 1];
-      if (prev && vis < prev.offsetLeft + prev.offsetWidth / 2) tabsEl.insertBefore(el, prev);
-      else if (next && vis > next.offsetLeft + next.offsetWidth / 2) tabsEl.insertBefore(el, next.nextSibling);
-      el.style.transform = 'translateX(' + (dx - (el.offsetLeft - d.startLeft)) + 'px)';
-      poke();
+      const rects = sibs.map(n => ({ left: n.offsetLeft, w: n.offsetWidth }));
+      const from = sibs.indexOf(el);
+      if (from < 0) return;
+      const gap = rects.length > 1 ? Math.max(0, rects[1].left - (rects[0].left + rects[0].w)) : 0;
+      const step = rects[from].w + gap;
+      const d = { startX: e.clientX, active: false, to: from };
+
+      const place = (dx) => {
+        const minDx = rects[0].left - rects[from].left;
+        const last = rects[rects.length - 1];
+        const maxDx = last.left + last.w - rects[from].w - rects[from].left;
+        dx = Math.max(minDx, Math.min(maxDx, dx));
+        el.style.transform = 'translateX(' + dx + 'px)';
+        const center = rects[from].left + dx + rects[from].w / 2;
+        let to = 0;
+        rects.forEach((r, i) => { if (i !== from && r.left + r.w / 2 < center) to++; });
+        d.to = to;
+        sibs.forEach((n, i) => {
+          if (n === el) return;
+          let shift = 0;
+          if (from < to && i > from && i <= to) shift = -step;
+          else if (from > to && i >= to && i < from) shift = step;
+          n.style.transform = shift ? 'translateX(' + shift + 'px)' : '';
+        });
+        poke();
+      };
+      const onMove = (ev) => {
+        if (ev.buttons === 0) { finish(true); return; }   // button was released somewhere we never heard about
+        const dx = ev.clientX - d.startX;
+        if (!d.active) {
+          if (Math.abs(dx) < 5) return;
+          d.active = true; dragging = true;
+          el.classList.add('dragging');
+          sibs.forEach(n => { if (n !== el) n.classList.add('shifting'); });
+        }
+        place(dx);
+      };
+      const onUp = () => finish(true);
+      const onCancel = () => finish(false);
+      const onKey = (ev) => { if (ev.key === 'Escape') finish(false); };
+      function finish(commit) {
+        window.removeEventListener('pointermove', onMove, true);
+        window.removeEventListener('pointerup', onUp, true);
+        window.removeEventListener('pointercancel', onCancel, true);
+        window.removeEventListener('blur', onCancel);
+        window.removeEventListener('keydown', onKey, true);
+        endDrag = null;
+        const was = d.active;
+        sibs.forEach(n => { n.style.transform = ''; n.classList.remove('shifting'); });
+        el.classList.remove('dragging');
+        dragging = false;
+        if (was) {
+          el._dragged = true;
+          setTimeout(() => { el._dragged = false; }, 80);
+          if (commit && d.to !== from) {
+            const ref = sibs.filter(n => n !== el)[d.to];
+            tabsEl.insertBefore(el, ref || null);
+            const si = S.tabs.findIndex(t => t.id === id);
+            if (si >= 0) { const [mt] = S.tabs.splice(si, 1); S.tabs.splice(d.to, 0, mt); }
+            L.send('tab:move', { id, index: d.to });
+          }
+        }
+        renderTabs();
+        poke();
+      }
+      endDrag = finish;
+      window.addEventListener('pointermove', onMove, true);
+      window.addEventListener('pointerup', onUp, true);
+      window.addEventListener('pointercancel', onCancel, true);
+      window.addEventListener('blur', onCancel);
+      window.addEventListener('keydown', onKey, true);
     });
-    const end = () => {
-      if (!d) return;
-      const was = d.active; d = null;
-      if (!was) return;
-      el._dragged = true;
-      setTimeout(() => { el._dragged = false; }, 80);
-      el.classList.remove('dragging'); el.style.transform = '';
-      dragging = false;
-      L.send('tab:move', { id, index: Array.from(tabsEl.children).indexOf(el) });
-    };
-    el.addEventListener('pointerup', end);
-    el.addEventListener('pointercancel', end);
   }
 
   // ---------- toolbar / address ----------
