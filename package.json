@@ -1,7 +1,7 @@
 {
   "name": "lumen-browser",
   "productName": "Lumen",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Lumen: a Chromium-based browser with a Liquid Glass style toolbar.",
   "main": "src/main/main.js",
   "private": true,
