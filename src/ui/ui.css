@@ -59,7 +59,8 @@ html[data-mode="off"] #glass{display:none}
 .tab:hover:not([aria-selected="true"]){background:var(--hover)}
 .tab[aria-selected="true"]{font-weight:600}
 .tab.sleeping .tfav,.tab.sleeping .ttitle{opacity:.55}
-.tab.dragging{z-index:3;transition:none;pointer-events:none}
+.tab.dragging{z-index:3;transition:none}
+.tab.shifting{transition:transform .16s cubic-bezier(.2,.8,.2,1),background .12s}
 .tfav{width:16px;height:16px;flex:none;border-radius:4px;display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff;overflow:hidden}
 .tfav img{width:16px;height:16px;display:block}
 .tspin{width:14px;height:14px;flex:none;border-radius:50%;border:2px solid var(--press);border-top-color:var(--accent);animation:spin .8s linear infinite}
