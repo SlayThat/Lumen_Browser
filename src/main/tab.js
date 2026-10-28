@@ -3,6 +3,7 @@ const { WebContentsView } = require('electron');
 const S = require('./state');
 const C = require('./config');
 const { classify, hostOf } = require('./omnibox');
+const nf = require('./netfilter');
 
 let nextTabId = 1;
 const GESTURE_MS = 1500;
@@ -21,6 +22,7 @@ class Tab {
     this.sleeping = false;
     this.lastActive = Date.now();
     this.errorFor = '';
+    this.pinned = !!opts.pinned;
     this.cssKey = null;
     this.lastGesture = 0;
     this.ctxParams = null;
@@ -96,6 +98,16 @@ class Tab {
     wc.on('did-fail-load', (e, code, desc, validatedURL, isMainFrame) => {
       if (!isMainFrame || code === -3) return; // -3 = aborted (user navigated away)
       if (validatedURL.startsWith('lumen://error')) return;
+      // HTTPS-first: the site has no working https, so open it over http once and say so.
+      if (/^https:\/\//i.test(validatedURL) && nf.shouldFallBack(code)) {
+        const host = nf.hostOfUrl(validatedURL);
+        if (S.upgraded.has(host) && !S.httpAllow.has(host)) {
+          S.httpAllow.add(host);
+          win.toast(host + ' has no secure connection, so it opened over http.');
+          wc.loadURL('http://' + validatedURL.slice(8)).catch(() => {});
+          return;
+        }
+      }
       this.errorFor = validatedURL;
       this.url = validatedURL;
       this.showError(desc, code, validatedURL);
@@ -245,7 +257,7 @@ class Tab {
   info() {
     let title = this.title;
     if (!title) title = this.url === NEWTAB ? 'New Tab' : (hostOf(this.url) || this.url || 'New Tab');
-    return { id: this.id, title, url: this.url, favicon: this.favicon, loading: this.loading, sleeping: this.sleeping, audible: this.audible };
+    return { id: this.id, title, url: this.url, favicon: this.favicon, loading: this.loading, sleeping: this.sleeping, audible: this.audible, pinned: this.pinned };
   }
 }
 

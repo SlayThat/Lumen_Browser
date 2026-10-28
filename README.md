@@ -11,8 +11,7 @@ Lumen is built on Chromium (through Electron), so websites work the way they do 
 1. Open the [Releases page](../../releases) and pick the newest version.
 2. Download one of:
    - `Lumen-<version>-x64.exe`: the normal installer (recommended). It updates itself.
-   - `Lumen-<version>-x64.msi`: installer for IT admins. It does not update itself.
-   - `Lumen-<version>-portable.exe`: runs without installing. It does not update itself.
+   - `Lumen-<version>-portable.exe`: runs without installing. It does not update itself. Use one of the two, not both.
 3. Run it. If Windows shows a blue SmartScreen box, see the note above.
 
 To make Lumen your main browser, open Lumen, go to **Settings > General > Make default**, and choose Lumen in the Windows page that opens.
@@ -20,7 +19,10 @@ To make Lumen your main browser, open Lumen, go to **Settings > General > Make d
 ## Features
 
 - Liquid Glass toolbar with three looks: Glass, Frosted (lighter on your graphics card) and Off. Change it in Settings.
-- Tabs you can drag to reorder, sleeping background tabs, and private windows.
+- Tabs you can drag to reorder, pin to the left (right-click a tab), sleeping background tabs, and private windows.
+- Bookmarks bar, and import from Chrome, Edge, Brave or an exported bookmarks file (Settings > General).
+- Blocks third-party ads and trackers (Settings > Privacy and security). It cannot block ads a site serves itself, such as YouTube video ads.
+- Opens http:// addresses over https when the site supports it.
 - One box for addresses and searches (DuckDuckGo by default, Google and Bing available).
 - Find in page, per-site zoom, bookmarks, history and downloads.
 - Privacy first: sites must ask before using your camera, microphone or location, and bad certificates are never accepted silently.
@@ -28,7 +30,7 @@ To make Lumen your main browser, open Lumen, go to **Settings > General > Make d
 ## What is not here yet
 
 - No extensions. Chrome Web Store extensions do not work in Lumen.
-- No password manager, sync, ad blocker or import from other browsers.
+- No password manager or sync. Only bookmarks can be imported, not history or passwords.
 - No Netflix-style protected video (Widevine).
 
 ## Keyboard shortcuts
@@ -61,7 +63,8 @@ You need Windows 10 or 11 and Node.js 20 or newer.
 ```
 npm install
 npm start          # run Lumen
-npm run dist       # build the installer, MSI and portable exe into dist/
+npm run dist       # build the installer and portable exe into dist/
+npm test           # run the unit tests
 ```
 
 How it works inside, and notes for contributors, are in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). How releases are made is in [PUBLISHING.md](PUBLISHING.md).

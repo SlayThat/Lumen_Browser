@@ -4,7 +4,7 @@
 (function () {
   const L = window.lumen;
   const $ = (id) => document.getElementById(id);
-  const STRIP = 92;
+  let STRIP = 92;
   const doc = document.documentElement;
 
   let S = { tabs: [], activeId: 0, nav: { url: '' }, isPrivate: false, caption: 'native', captionW: 144, size: [1200, 800], maximized: false };
@@ -201,6 +201,7 @@
       openMenu($('ctx'), [
         { label: 'Reload tab', run: () => L.send('tab:reload', t.id) },
         { label: 'Duplicate tab', run: () => L.send('tab:duplicate', t.id) },
+        { label: t.pinned ? 'Unpin tab' : 'Pin tab', run: () => L.send('tab:pin', { id: t.id, pinned: !t.pinned }) },
         { sep: true },
         { label: 'Close tab', run: () => L.send('tab:close', t.id) },
         { label: 'Close other tabs', enabled: S.tabs.length > 1, run: () => L.send('tab:closeOthers', t.id) }
@@ -224,6 +225,7 @@
     el.setAttribute('aria-selected', sel ? 'true' : 'false');
     el.tabIndex = sel ? 0 : -1;
     el.classList.toggle('sleeping', !!t.sleeping);
+    el.classList.toggle('pinned', !!t.pinned);
     if (sel) el.dataset.glass = '0.45'; else delete el.dataset.glass;
     el.title = (t.sleeping ? 'Sleeping: ' : '') + t.title;
     el.querySelector('.ttitle').textContent = t.title;
@@ -281,6 +283,9 @@
         const center = rects[from].left + dx + rects[from].w / 2;
         let to = 0;
         rects.forEach((r, i) => { if (i !== from && r.left + r.w / 2 < center) to++; });
+        const pc = S.tabs.filter(x => x.pinned).length;   // pinned tabs stay in front of the others
+        const me = S.tabs.find(x => x.id === id);
+        if (me && me.pinned) to = Math.min(to, pc - 1); else to = Math.max(to, pc);
         d.to = to;
         sibs.forEach((n, i) => {
           if (n === el) return;
@@ -337,6 +342,63 @@
       window.addEventListener('blur', onCancel);
       window.addEventListener('keydown', onKey, true);
     });
+  }
+
+  // ---------- bookmarks bar ----------
+  let barItems = [], barRev = -1, barW = 0;
+  function syncBar() {
+    const on = !!S.barOn;
+    $('row3').hidden = !on;
+    if (!on) { barRev = -1; return; }
+    if (S.barRev !== barRev) {
+      barRev = S.barRev;
+      L.invoke('bookmarks:bar').then(items => { barItems = Array.isArray(items) ? items : []; drawBar(); });
+    } else if ((S.size || [])[0] !== barW) drawBar();
+  }
+  function bmMenu(b, e) {
+    e.preventDefault();
+    openMenu($('ctx'), [
+      { label: 'Open in new tab', run: () => L.send('tab:new', b.url) },
+      { label: 'Hide from bar', run: () => L.send('bookmark:bar', { id: b.id, bar: false }) },
+      { label: 'Remove bookmark', run: () => L.send('bookmarks:remove', b.id) }
+    ], e.clientX, e.clientY + 6);
+  }
+  function drawBar() {
+    const bar = $('bmbar');
+    barW = (S.size || [])[0] || 0;
+    bar.textContent = '';
+    if (!barItems.length) { bar.append(h('div', { id: 'bmempty', text: 'Bookmarks you save with the star appear here.' })); poke(); requestLayout(); return; }
+    const chips = barItems.map(b => {
+      const host = hostOf(b.url);
+      const tile = h('span', { class: 'tfav', text: (host[0] || '?').toUpperCase() });
+      tileColor(tile, host || 'x');
+      const el = h('button', { class: 'bm', type: 'button', title: b.title + '\n' + b.url }, tile, h('span', { class: 'bmt', text: b.title || host }));
+      el.addEventListener('click', () => L.send('navTo', b.url));
+      el.addEventListener('auxclick', (e) => { if (e.button === 1) { e.preventDefault(); L.send('tab:new', b.url); } });
+      el.addEventListener('mousedown', (e) => { if (e.button === 1) e.preventDefault(); });
+      el.addEventListener('contextmenu', (e) => bmMenu(b, e));
+      return el;
+    });
+    const more = h('button', { id: 'bmmore', type: 'button', 'aria-label': 'More bookmarks', title: 'More bookmarks', text: '»', hidden: true });
+    bar.append(...chips, more);
+    const room = bar.clientWidth - 12 - 30;
+    let used = 0, firstHidden = chips.length;
+    for (let i = 0; i < chips.length; i++) {
+      used += chips[i].offsetWidth + 2;
+      if (used > room) { firstHidden = i; break; }
+    }
+    if (firstHidden < chips.length) {
+      // Everything that does not fit goes into the » menu.
+      for (let i = firstHidden; i < chips.length; i++) chips[i].hidden = true;
+      more.hidden = false;
+      more.addEventListener('click', () => {
+        const r = more.getBoundingClientRect();
+        const rest = barItems.slice(firstHidden, firstHidden + 40).map(b => ({ label: b.title || hostOf(b.url), run: () => L.send('navTo', b.url) }));
+        if (barItems.length - firstHidden > 40) rest.push({ sep: true }, { label: 'Show all bookmarks', run: () => openSheet('bookmarks') });
+        openMenu($('ctx'), rest, r.right, r.bottom + 6, true);
+      });
+    }
+    poke(); requestLayout();
   }
 
   // ---------- toolbar / address ----------
@@ -724,6 +786,16 @@
     });
     return b;
   }
+  function importRow() {
+    const box = h('div', { class: 'importbtns' });
+    const add = (label, source) => box.append(actionButton(label, () => L.send('import:bookmarks', source)));
+    L.invoke('import:sources').then(list => {
+      if (!box.isConnected && !document.body.contains(box)) return;
+      (Array.isArray(list) ? list : []).forEach(x => add(x.label, x.key));
+      add('From file…', 'file');
+    });
+    return h('div', { class: 'srow' }, h('div', { class: 'sl' }, 'Import bookmarks', h('small', { text: 'From Chrome, Edge or Brave on this PC, or from an exported bookmarks file (Firefox, Safari and others).' })), box);
+  }
   function actionButton(label, fn) {
     const b = h('button', { class: 'btn', type: 'button', text: label });
     b.addEventListener('click', fn);
@@ -754,9 +826,14 @@
           actionButton('Make default', () => L.send('app:defaultBrowser'))),
         h('div', { class: 'srow' }, h('div', { class: 'sl' }, 'Updates', h('small', { text: 'Lumen checks on its own at startup. Installed copies only.' })),
           actionButton('Check now', () => L.send('app:checkUpdate'))),
+        toggle('Show bookmarks bar', null, s.bookmarksBar, 'bookmarksBar'),
+        importRow(),
         toggle('Restore tabs on launch', null, s.restoreSession, 'restoreSession'),
         h('div', { class: 'srow' }, h('div', { class: 'sl' }, 'Put background tabs to sleep after', h('small', { text: 'Sleeping tabs free their memory and reload when you open them.' })),
           seg('sleepMinutes', [[0, 'Never'], [10, '10 min'], [20, '20 min'], [60, '1 hour']], s.sleepMinutes))),
+      group('Privacy and security',
+        toggle('Block ads and trackers', 'Blocks third-party ad and tracking networks. It cannot block ads a site serves itself, such as YouTube video ads.' + (s.adblockCount ? ' Blocked ' + s.adblockCount.toLocaleString() + ' requests since Lumen started.' : ''), s.adblock, 'adblock'),
+        toggle('Use secure connections when possible', 'Opens http:// addresses over https first. If a site has no https, Lumen opens it over http and tells you.', s.httpsFirst, 'httpsFirst')),
       group('Browsing data',
         h('div', { class: 'srow' }, h('div', { class: 'sl', text: 'History' }), confirmButton('Clear history', 'history')),
         h('div', { class: 'srow' }, h('div', { class: 'sl', text: 'Cache' }), confirmButton('Clear cache', 'cache')),
@@ -827,9 +904,11 @@
     }
     if (lastActive && lastActive !== s.activeId && !$('findbar').hidden) { hidePop($('findbar')); $('findcount').textContent = ''; }
     lastActive = s.activeId;
+    if (s.stripH && s.stripH !== STRIP) { STRIP = s.stripH; doc.style.setProperty('--strip', STRIP + 'px'); requestLayout(); }
     renderCaption();
     renderTabs();
     renderNav();
+    syncBar();
   });
   L.on('frame', (f) => { G.setFrame(f); applyGlassParams(); poke(); });
   L.on('settings', (s) => { settings = s; applySettings(); if (sheetKind === 'settings' && !sheet.contains(document.activeElement)) renderSettings(); });
