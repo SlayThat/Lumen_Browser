@@ -1,7 +1,9 @@
 'use strict';
 // All IPC from the glass UI. Every message is checked: sender must be a Lumen UI view
 // showing lumen://app/, and every argument is validated before use.
-const { app, ipcMain, shell, session, clipboard } = require('electron');
+const fs = require('fs');
+const { app, ipcMain, shell, session, clipboard, dialog } = require('electron');
+const importer = require('./importer');
 const S = require('./state');
 const C = require('./config');
 const { Win } = require('./win');
@@ -23,7 +25,10 @@ const SETTINGS = {
   'glass.saturation': num(0.8, 1.8),
   'glass.tint': num(0, 0.6),
   sleepMinutes: v => isInt(v) && v >= 0 && v <= 720,
-  restoreSession: isBool
+  restoreSession: isBool,
+  adblock: isBool,
+  httpsFirst: isBool,
+  bookmarksBar: isBool
 };
 
 function winFrom(event) {
@@ -55,6 +60,7 @@ function register() {
   on('tab:close', (w, id) => { if (isInt(id)) w.closeTab(id); });
   on('tab:activate', (w, id) => { if (isInt(id)) w.activate(id); });
   on('tab:move', (w, o) => { if (o && isInt(o.id) && isInt(o.index)) w.moveTab(o.id, o.index); });
+  on('tab:pin', (w, o) => { if (o && isInt(o.id) && isBool(o.pinned)) w.pinTab(o.id, o.pinned); });
   on('tab:duplicate', (w, id) => { const t = isInt(id) && w.findTab(id); if (t) w.newTab(t.url, { opener: t }); });
   on('tab:closeOthers', (w, id) => { if (!isInt(id)) return; w.tabs.filter(t => t.id !== id).forEach(t => w.closeTab(t.id)); });
   on('tab:reload', (w, id) => { const t = isInt(id) && w.findTab(id); if (t) { t.ensureAwake(); t.reload(false); } });
@@ -94,6 +100,34 @@ function register() {
   on('perm:answer', (w, o) => { if (o && isInt(o.id)) w.answerPermission(o.id, o.allow === true, o.remember === true); });
 
   // ---- bookmarks / history ----
+  handle('bookmarks:bar', () => S.barItems());
+  on('bookmark:bar', (w, o) => { if (o && isStr(o.id, 64) && isBool(o.bar)) { S.setBookmarkBar(o.id, o.bar); S.allWins().forEach(x => x.pushState()); } });
+  const BROWSERS = { chrome: 'Chrome', edge: 'Edge', brave: 'Brave' };
+  handle('import:sources', () => {
+    const files = importer.bookmarkFiles(process.env);
+    return Object.keys(BROWSERS).filter(k => files[k] && fs.existsSync(files[k])).map(k => ({ key: k, label: BROWSERS[k] }));
+  });
+  on('import:bookmarks', async (w, source) => {
+    try {
+      let list = [];
+      if (source === 'file') {
+        const r = await dialog.showOpenDialog(w.bw, { title: 'Import bookmarks', properties: ['openFile'], filters: [{ name: 'Bookmark files', extensions: ['html', 'htm', 'json'] }] });
+        if (r.canceled || !r.filePaths[0]) return;
+        const st = fs.statSync(r.filePaths[0]);
+        if (st.size > 50 * 1024 * 1024) return w.toast('That file is too large to import');
+        const text = fs.readFileSync(r.filePaths[0], 'utf8');
+        list = /\.json$/i.test(r.filePaths[0]) ? importer.parseChromiumBookmarks(text) : importer.parseHtmlBookmarks(text);
+      } else if (BROWSERS[source]) {
+        const f = importer.bookmarkFiles(process.env)[source];
+        if (!f || !fs.existsSync(f)) return w.toast('Could not find ' + BROWSERS[source] + ' bookmarks');
+        list = importer.parseChromiumBookmarks(fs.readFileSync(f, 'utf8'));
+      } else return;
+      const n = importer.mergeBookmarks(S.bookmarks.data.items, list, Date.now(), () => S.newId());
+      if (n) { S.bookmarks.save(); S.barRev++; }
+      S.allWins().forEach(x => { if (!x.closed) x.pushState(); });
+      w.toast(list.length ? ('Imported ' + n + ' bookmark' + (n === 1 ? '' : 's') + (n < list.length ? ' (' + (list.length - n) + ' already saved)' : '')) : 'No bookmarks found in that file');
+    } catch (e) { w.toast('Could not import bookmarks'); }
+  });
   handle('bookmarks:list', () => S.bookmarks.data.items.slice().reverse());
   on('bookmarks:remove', (w, id) => { if (isStr(id, 64)) { S.removeBookmark(id); w.pushState(); } });
   handle('history:list', (w, q) => S.listHistory(isStr(q, 256) ? q : '', 400));

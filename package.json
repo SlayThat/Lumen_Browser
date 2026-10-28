@@ -1,14 +1,15 @@
 {
   "name": "lumen-browser",
   "productName": "Lumen",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Lumen: a Chromium-based browser with a Liquid Glass style toolbar.",
   "main": "src/main/main.js",
   "private": true,
   "scripts": {
     "start": "electron .",
     "check": "node scripts/check.js",
-    "dist": "electron-builder --win --publish never"
+    "dist": "electron-builder --win --publish never",
+    "test": "node test/netfilter.test.js"
   },
   "devDependencies": {
     "electron": "^37.0.0",
@@ -29,7 +30,6 @@
       "icon": "build/icon.ico",
       "target": [
         "nsis",
-        "msi",
         "portable"
       ],
       "artifactName": "Lumen-${version}-${arch}.${ext}"
@@ -46,13 +46,6 @@
     },
     "portable": {
       "artifactName": "Lumen-${version}-portable.${ext}"
-    },
-    "msi": {
-      "oneClick": false,
-      "perMachine": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "runAfterFinish": false
     },
     "publish": [
       {

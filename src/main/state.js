@@ -17,6 +17,10 @@ const S = {
   gpuDown: false,
   settings: null, history: null, bookmarks: null, sessionStore: null, permissions: null,
   hIndex: new Map(),
+  httpAllow: new Set(),   // hosts that failed over https this session and are loaded over http
+  upgraded: new Set(),    // hosts we tried to upgrade to https
+  blockedCount: 0,
+  barRev: 1,              // bumps whenever the bookmarks bar contents change
 
   init() {
     this.settings = new Store('settings', C.DEFAULT_SETTINGS);
@@ -39,7 +43,7 @@ const S = {
   // Settings as the UI and capture loop should see them (Glass is forced off after a GPU crash).
   view() {
     const d = this.settings.data;
-    return this.gpuDown ? Object.assign({}, d, { glassMode: 'off' }) : d;
+    return Object.assign({}, d, { adblockCount: this.blockedCount }, this.gpuDown ? { glassMode: 'off' } : {});
   },
   flushAll() {
     for (const s of [this.settings, this.history, this.bookmarks, this.sessionStore, this.permissions]) if (s) s.flush();
@@ -119,14 +123,21 @@ const S = {
   toggleBookmark(url, title) {
     const items = this.bookmarks.data.items;
     const i = items.findIndex(b => b.url === url);
-    if (i >= 0) { items.splice(i, 1); this.bookmarks.save(); return false; }
-    items.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), url, title: title || hostOf(url) || url, time: Date.now() });
-    this.bookmarks.save(); return true;
+    if (i >= 0) { items.splice(i, 1); this.bookmarks.save(); this.barRev++; return false; }
+    items.push({ id: this.newId(), url, title: title || hostOf(url) || url, time: Date.now(), bar: true });
+    this.bookmarks.save(); this.barRev++; return true;
   },
   removeBookmark(id) {
     this.bookmarks.data.items = this.bookmarks.data.items.filter(b => b.id !== id);
-    this.bookmarks.save();
+    this.bookmarks.save(); this.barRev++;
   },
+  setBookmarkBar(id, bar) {
+    const b = this.bookmarks.data.items.find(x => x.id === id);
+    if (!b) return;
+    b.bar = !!bar; this.bookmarks.save(); this.barRev++;
+  },
+  barItems() { return this.bookmarks.data.items.filter(b => b.bar !== false).slice(0, 300).map(b => ({ id: b.id, url: b.url, title: b.title })); },
+  newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); },
 
   // ---- helpers ----
   allWins() { return Array.from(this.windows); },

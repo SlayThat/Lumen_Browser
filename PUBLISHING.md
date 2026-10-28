@@ -38,12 +38,10 @@ Do not recommend Lumen for banking or other sensitive use until updates are auto
 ## 5. Things a public browser is expected to have
 
 Not built yet, in rough order of how much users will notice:
-1. Set as default browser, plus links opened from other apps.
-2. Import bookmarks and history from Chrome, Edge or Firefox.
-3. An ad and tracker blocker.
-4. A password manager or system password autofill.
-5. A proper bookmarks bar, and tab groups or pinned tabs.
-6. Accessibility and language support (the UI is English only).
+1. Import history and passwords (bookmarks are done).
+2. A password manager or system password autofill.
+3. Tab groups, and better ad blocking (cosmetic filters, per-site switch).
+4. Accessibility and language support (the UI is English only).
 
 ## 6. Legal and housekeeping
 
@@ -60,15 +58,11 @@ Not built yet, in rough order of how much users will notice:
 - ToDesktop, EV certs no longer give immediate SmartScreen reputation: https://www.todesktop.com/blog/posts/windows-apps-psa-ev-certs-do-not-grant-immediate-reputation-anymore
 - Electron, Chrome extension support: https://www.electronjs.org/docs/latest/api/extensions
 
-## MSI installer
-
-`npm run dist` now also builds an `.msi` (electron-builder's MSI target). It needs the WiX Toolset, which electron-builder downloads on Windows; I could not test the build here. The MSI is machine-wide (per-machine), so it asks for admin rights. Sign the .msi too, and for open source on GitHub, attach it to a GitHub Release. Pick a licence (MIT is common) before making the repo public.
-
 ## Release steps (GitHub)
 
 1. Bump `version` in `package.json`, commit and push.
 2. Tag it: `git tag v0.1.1 && git push origin v0.1.1`.
-3. The Release workflow builds on Windows and attaches the installer, MSI, portable exe and `latest.yml` to a GitHub Release.
-4. Installed copies (the NSIS `.exe`) update themselves from that release. The MSI and portable builds do not self-update.
+3. The Release workflow builds on Windows and attaches the installer, portable exe and `latest.yml` to a GitHub Release.
+4. Installed copies (the NSIS `.exe`) update themselves from that release. The portable build does not self-update.
 
 Default browser: the installer registers Lumen under Windows Default apps. Windows does not let apps set themselves as default, so Settings > Make default opens the Windows page where the user picks Lumen. Not tested on a real Windows machine.

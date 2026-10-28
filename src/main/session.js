@@ -8,6 +8,7 @@ const S = require('./state');
 const C = require('./config');
 const { hostOf } = require('./omnibox');
 const pages = require('./pages');
+const nf = require('./netfilter');
 
 const UI_ROOT = path.join(__dirname, '..', 'ui');
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png' };
@@ -149,6 +150,26 @@ function prepare(partition, opts) {
   ses.setPermissionCheckHandler((wc, permission, requestingOrigin) => {
     if (ALWAYS.has(permission)) return true;
     return S.permissions.data.items[requestingOrigin + '|' + permission] === 'allow';
+  });
+
+  // HTTPS-first and the ad/tracker blocklist share one request hook (a session allows only one).
+  ses.webRequest.onBeforeRequest({ urls: ['http://*/*', 'https://*/*'] }, (details, callback) => {
+    try {
+      const set = S.settings.data;
+      if (details.resourceType === 'mainFrame') {
+        if (set.httpsFirst) {
+          const up = nf.upgradeUrl(details.url, S.httpAllow);
+          if (up) { S.upgraded.add(nf.hostOfUrl(details.url)); return callback({ redirectURL: up }); }
+        }
+        return callback({});
+      }
+      if (set.adblock) {
+        const wc = details.webContents;
+        const page = (wc && !wc.isDestroyed() && wc.getURL()) || details.referrer || '';
+        if (nf.shouldBlock(details, page)) { S.blockedCount++; return callback({ cancel: true }); }
+      }
+    } catch (e) { /* never let a filter bug stop browsing */ }
+    callback({});
   });
 
   setupDownloads(ses);

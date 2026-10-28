@@ -94,7 +94,7 @@ class Win {
     const urls = (opts.tabs && opts.tabs.length) ? opts.tabs : [{ url: opts.url || NEWTAB }];
     const wanted = Math.max(opts.active || 0, 0);
     // Restored tabs start asleep (no page loaded) except the one that will be shown.
-    urls.forEach((t, i) => this.newTab(t.url, { background: true, title: t.title, noFocus: true, sleeping: !!opts.tabs && i !== wanted }));
+    urls.forEach((t, i) => this.newTab(t.url, { background: true, title: t.title, noFocus: true, pinned: !!t.pinned, sleeping: !!opts.tabs && i !== wanted }));
     const idx = Math.min(wanted, this.tabs.length - 1);
     this.activate(this.tabs[idx].id, { focus: false });
     this.layout();
@@ -117,12 +117,13 @@ class Win {
 
   // ---------- layout ----------
   isFullscreen() { return this.bw.isFullScreen() || this.htmlFs; }
-  inset() { return (S.settings.data.underlay && !this.isFullscreen()) ? C.STRIP_H : 0; }
+  stripH() { return C.STRIP_H + (S.settings.data.bookmarksBar ? C.BAR_H : 0); }
+  inset() { return (S.settings.data.underlay && !this.isFullscreen()) ? this.stripH() : 0; }
   uiHeight() {
     const [, h] = this.bw.getContentSize();
     if (this.isFullscreen()) return 0;
     if (this.uiMode === 'full') return h;
-    return Math.min(h, C.STRIP_H + (this.uiMode === 'extra' ? this.uiExtra : 0));
+    return Math.min(h, this.stripH() + (this.uiMode === 'extra' ? this.uiExtra : 0));
   }
   layout() {
     if (this.closed) return;
@@ -133,7 +134,7 @@ class Win {
     this.ui.setVisible(uiH > 0);
     const a = this.active;
     if (a && a.view) {
-      const top = (S.settings.data.underlay || full) ? 0 : C.STRIP_H;
+      const top = (S.settings.data.underlay || full) ? 0 : this.stripH();
       a.view.setBounds({ x: 0, y: top, width: w, height: Math.max(0, h - top) });
     }
     this.pushState();
@@ -165,9 +166,10 @@ class Win {
   findTab(id) { return this.tabs.find(t => t.id === id) || null; }
 
   newTab(url, opts = {}) {
-    const t = new Tab(this, { url: url || NEWTAB, title: opts.title, sleeping: !!opts.sleeping });
+    const t = new Tab(this, { url: url || NEWTAB, title: opts.title, sleeping: !!opts.sleeping, pinned: !!opts.pinned });
     let at = this.tabs.length;
     if (opts.opener) { const i = this.tabs.indexOf(opts.opener); if (i >= 0) at = i + 1; }
+    if (!t.pinned) at = Math.max(at, this.pinnedCount()); // normal tabs never open among the pinned ones
     this.tabs.splice(at, 0, t);
     if (!opts.background) {
       this.activate(t.id, { focus: !opts.noFocus });
@@ -176,6 +178,20 @@ class Win {
     this.pushState();
     this.scheduleSave();
     return t;
+  }
+
+  pinnedCount() { return this.tabs.filter(t => t.pinned).length; }
+  pinTab(id, on) {
+    const i = this.tabs.findIndex(t => t.id === id);
+    if (i < 0) return;
+    const t = this.tabs[i];
+    if (t.pinned === !!on) return;
+    this.tabs.splice(i, 1);
+    t.pinned = !!on;
+    // Pinned tabs live at the start; a tab you pin goes to the end of that group, an unpinned one to just after it.
+    this.tabs.splice(this.pinnedCount(), 0, t);
+    this.pushState();
+    this.scheduleSave();
   }
 
   activate(id, opts = {}) {
@@ -227,7 +243,9 @@ class Win {
     const i = this.tabs.findIndex(t => t.id === id);
     if (i < 0 || !Number.isInteger(index)) return;
     const [t] = this.tabs.splice(i, 1);
-    this.tabs.splice(Math.max(0, Math.min(index, this.tabs.length)), 0, t);
+    const pc = this.pinnedCount();                       // other tabs only: t is out of the list
+    const lo = t.pinned ? 0 : pc, hi = t.pinned ? pc : this.tabs.length;
+    this.tabs.splice(Math.max(lo, Math.min(index, hi)), 0, t);
     this.pushState();
     this.scheduleSave();
   }
@@ -348,7 +366,7 @@ class Win {
         bookmarkable: /^https?:/i.test(url),
         zoom: f
       },
-      stripH: C.STRIP_H,
+      stripH: this.stripH(), barRev: S.barRev, barOn: !!S.settings.data.bookmarksBar,
       size: this.bw.getContentSize()
     };
   }
@@ -363,7 +381,7 @@ class Win {
     if (tab !== this.active) return;
     const items = ctxmenu.build(tab, params);
     if (!items.length) return;
-    const top = (S.settings.data.underlay || this.isFullscreen()) ? 0 : C.STRIP_H;
+    const top = (S.settings.data.underlay || this.isFullscreen()) ? 0 : this.stripH();
     this.ctx = { tab, params };
     this.send('ctx:show', { x: params.x, y: params.y + top, items });
   }
@@ -411,8 +429,8 @@ class Win {
         let rect, ch, mirror = 0;
         if (set.underlay) { rect = { x: 0, y: 0, width: w, height: uiH }; ch = uiH; }
         else {
-          ch = Math.max(1, Math.min(h - C.STRIP_H, Math.max(C.STRIP_H, uiH - C.STRIP_H)));
-          rect = { x: 0, y: 0, width: w, height: ch }; mirror = C.STRIP_H;
+          ch = Math.max(1, Math.min(h - this.stripH(), Math.max(this.stripH(), uiH - this.stripH())));
+          rect = { x: 0, y: 0, width: w, height: ch }; mirror = this.stripH();
         }
         const img = await wc.capturePage(rect);
         if (!this.closed && this.active === a && !img.isEmpty()) {
@@ -444,7 +462,7 @@ class Win {
     const tabs = this.tabs.filter(t => /^(https?|file|lumen):/i.test(t.url));
     const act = this.active;
     const idx = Math.max(0, tabs.indexOf(act));
-    return { tabs: tabs.map(t => ({ url: t.url, title: t.title })), active: idx };
+    return { tabs: tabs.map(t => ({ url: t.url, title: t.title, pinned: !!t.pinned })), active: idx };
   }
   scheduleSave() {
     if (this.isPrivate) return;
@@ -475,7 +493,7 @@ class Win {
     for (const w of S.windows) {
       if (w.closed) continue;
       w.send('settings', S.view());
-      if (key === 'underlay') { w.layout(); w.tabs.forEach(t => t.applyInset()); w.lastHash = null; }
+      if (key === 'underlay' || key === 'bookmarksBar') { w.layout(); w.tabs.forEach(t => t.applyInset()); w.lastHash = null; w.captureSoon(); }
       if (key === 'glassMode') { w.lastHash = null; w.captureSoon(); }
       if (key === 'theme') w.updateAppearance();
     }
