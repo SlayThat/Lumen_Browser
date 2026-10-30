@@ -23,6 +23,7 @@ class Tab {
     this.lastActive = Date.now();
     this.errorFor = '';
     this.pinned = !!opts.pinned;
+    this.upgrade = null;
     this.cssKey = null;
     this.lastGesture = 0;
     this.ctxParams = null;
@@ -79,7 +80,7 @@ class Tab {
 
     wc.on('did-navigate', (e, url) => {
       if (url.startsWith('lumen://error')) this.url = this.errorFor || this.url;
-      else { this.errorFor = ''; this.url = url; }
+      else { this.errorFor = ''; this.url = url; this.upgrade = null; }
       if (!win.isPrivate && !url.startsWith('lumen://')) S.addHistory(url, wc.getTitle());
       this.applyInset();
       this.applyZoom();
@@ -101,7 +102,10 @@ class Tab {
       // HTTPS-first: the site has no working https, so open it over http once and say so.
       if (/^https:\/\//i.test(validatedURL) && nf.shouldFallBack(code)) {
         const host = nf.hostOfUrl(validatedURL);
-        if (S.upgraded.has(host) && !S.httpAllow.has(host)) {
+        const u = this.upgrade;
+        // Only a load that we upgraded may fall back. An https:// address the user typed never drops to http.
+        if (u && u.host === host && Date.now() - u.at < 60000 && !S.httpAllow.has(host)) {
+          this.upgrade = null;
           S.httpAllow.add(host);
           win.toast(host + ' has no secure connection, so it opened over http.');
           wc.loadURL('http://' + validatedURL.slice(8)).catch(() => {});

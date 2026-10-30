@@ -159,7 +159,12 @@ function prepare(partition, opts) {
       if (details.resourceType === 'mainFrame') {
         if (set.httpsFirst) {
           const up = nf.upgradeUrl(details.url, S.httpAllow);
-          if (up) { S.upgraded.add(nf.hostOfUrl(details.url)); return callback({ redirectURL: up }); }
+          if (up) {
+            // Remember that THIS tab was upgraded by us, so only that load may fall back to http.
+            const tab = details.webContents && S.wcToTab.get(details.webContents.id);
+            if (tab) tab.upgrade = { host: nf.hostOfUrl(details.url), at: Date.now() };
+            return callback({ redirectURL: up });
+          }
         }
         return callback({});
       }

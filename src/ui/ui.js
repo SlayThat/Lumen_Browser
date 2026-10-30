@@ -155,6 +155,7 @@
         if (extra > 0) mode = 'extra';
       }
       $('scrim').hidden = $('sheet').hidden;
+      doc.classList.toggle('sheetopen', !$('sheet').hidden);
       const key = mode + ':' + extra;
       if (key !== lastLayout) { lastLayout = key; L.send('layout', { mode, extra }); }
     });
