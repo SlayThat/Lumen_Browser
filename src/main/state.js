@@ -18,7 +18,6 @@ const S = {
   settings: null, history: null, bookmarks: null, sessionStore: null, permissions: null,
   hIndex: new Map(),
   httpAllow: new Set(),   // hosts that failed over https this session and are loaded over http
-  upgraded: new Set(),    // hosts we tried to upgrade to https
   blockedCount: 0,
   barRev: 1,              // bumps whenever the bookmarks bar contents change
 

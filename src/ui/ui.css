@@ -136,7 +136,7 @@ html[data-mode="off"] #glass{display:none}
 .mzoom .zv{min-width:48px;text-align:center;font-variant-numeric:tabular-nums}
 
 /* ---- sheet ---- */
-#sheet{left:50%;top:72px;width:min(780px,calc(100vw - 32px));height:min(640px,calc(100vh - 96px));margin-left:calc(min(780px,100vw - 32px) / -2);display:flex;flex-direction:column;border-radius:28px;background:var(--sheetbg);--oy:0}
+#sheet{left:50%;top:calc(var(--strip) - 20px);width:min(780px,calc(100vw - 32px));height:min(640px,calc(100vh - var(--strip) - 4px));margin-left:calc(min(780px,100vw - 32px) / -2);display:flex;flex-direction:column;border-radius:28px;background:var(--sheetbg);--oy:0}
 #sheethead{display:flex;align-items:center;gap:12px;padding:16px 16px 10px 24px}
 #sheethead h2{margin:0;font:650 20px/1.2 var(--display);flex:none}
 #sheettools{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0}
@@ -215,3 +215,7 @@ html[data-mode="off"] #sheet{background:var(--solid)!important}
 .tab.pinned{flex:none;width:34px;min-width:34px;padding:0;justify-content:center;gap:0}
 .tab.pinned .ttitle,.tab.pinned .tclose,.tab.pinned .tsound{display:none!important}
 .importbtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+
+/* While a sheet is open the bookmarks bar steps back, so its crisp text never shows through the sheet's glass. */
+#row3{transition:opacity .16s}
+html.sheetopen #row3{opacity:0;pointer-events:none}
