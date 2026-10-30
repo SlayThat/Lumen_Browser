@@ -16,6 +16,12 @@ Lumen is built on Chromium (through Electron), so websites work the way they do 
 
 To make Lumen your main browser, open Lumen, go to **Settings > General > Make default**, and choose Lumen in the Windows page that opens.
 
+## Is Lumen safe?
+
+Yes, and you can check it yourself: the source is all here, releases are built by GitHub Actions, and each release has a checksum file and a signed build attestation. Lumen does not collect or send your data.
+
+Some antivirus and sandbox services flag new, unsigned installers like this one by mistake. That's a false positive. [SECURITY.md](SECURITY.md) explains why it happens and how to verify your download. A code-signing certificate is planned and will remove most of these warnings over time.
+
 ## Features
 
 - Liquid Glass toolbar with three looks: Glass, Frosted (lighter on your graphics card) and Off. Change it in Settings.

@@ -7,6 +7,8 @@ on:
 
 permissions:
   contents: write
+  id-token: write       # lets GitHub sign the build provenance
+  attestations: write
 
 jobs:
   build:
@@ -22,12 +24,22 @@ jobs:
       - run: npm run dist
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Checksums
+        shell: pwsh
+        run: |
+          Get-FileHash dist\*.exe -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLower())  $(Split-Path $_.Path -Leaf)" } | Out-File -Encoding ascii dist\SHA256SUMS.txt
+          Get-Content dist\SHA256SUMS.txt
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: 'dist/*.exe'
       - uses: actions/upload-artifact@v4
         with:
           name: lumen-windows
           path: |
             dist/*.exe
             dist/latest.yml
+            dist/SHA256SUMS.txt
       # Unsigned for now. After SignPath approval, add its signing step here
       # (signpath/github-action-submit-signing-request) before the release step.
       - name: Publish GitHub Release
@@ -37,4 +49,5 @@ jobs:
           files: |
             dist/*.exe
             dist/latest.yml
+            dist/SHA256SUMS.txt
             dist/*.blockmap

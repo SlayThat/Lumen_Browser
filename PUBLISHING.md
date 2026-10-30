@@ -66,3 +66,10 @@ Not built yet, in rough order of how much users will notice:
 4. Installed copies (the NSIS `.exe`) update themselves from that release. The portable build does not self-update.
 
 Default browser: the installer registers Lumen under Windows Default apps. Windows does not let apps set themselves as default, so Settings > Make default opens the Windows page where the user picks Lumen. Not tested on a real Windows machine.
+
+## When a scanner flags a release
+
+1. Check the verdict on VirusTotal first. A "behaviour" tag from a sandbox (ANY.RUN, Hybrid Analysis) is not the same as an antivirus engine detecting it.
+2. For each antivirus that flags it, send the file as a false positive through that vendor's form. Microsoft: https://www.microsoft.com/en-us/wdsi/filesubmission (choose "Software developer"). Say it is an open-source browser and give the GitHub release link.
+3. Sign the installer. It is the only fix that lasts (see section 1). Until then, keep releasing from GitHub Actions so the files are reproducible, and keep `SHA256SUMS.txt` and the attestation on every release.
+4. Do not rename files or hide behaviour to dodge a scanner. That makes real detections more likely, not less.
