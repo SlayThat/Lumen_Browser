@@ -5,7 +5,7 @@
 //   - rounded-rectangle signed-distance-field shapes (one per [data-glass] element)
 //   - edge refraction: the backdrop is sampled with an offset that is strong at the rim and
 //     falls to zero toward the middle, plus a small per-channel (RGB) dispersion at the rim
-//   - blur that is soft in the middle and sharp at the rim
+//   - blur that is soft in the middle and sharp at the rim (taps read mipmaps, so busy pages stay smooth)
 //   - saturation boost so the blur does not turn grey
 //   - tint that adapts to the brightness of the page behind it, to keep text legible
 //   - rim light: bright on top and bottom edges, darker on the left and right
@@ -34,10 +34,10 @@ float sdr(vec2 q, vec2 hw, float r){
   vec2 d = abs(q) - hw + r;
   return min(max(d.x, d.y), 0.0) + length(max(d, 0.0)) - r;
 }
-vec3 T(vec2 c){
+vec3 T(vec2 c, float lod){
   // uMirror > 0: the texture is the top of the page. Fold it upward around the toolbar's bottom edge.
   if (uMirror > 0.0) c.y = c.y < uMirror ? uMirror - c.y : c.y - uMirror;
-  return texture(uTex, clamp(c / uCap, vec2(0.002), vec2(0.998))).bgr;
+  return textureLod(uTex, clamp(c / uCap, vec2(0.002), vec2(0.998)), lod).bgr;
 }
 float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 
@@ -72,22 +72,25 @@ void main(){
   g = gl > 1e-4 ? g / gl : vec2(0.0);
 
   vec2 off = g * uRefr * (0.45 + 0.7 * p.y) * f * m;
-  float br = uBlur * smoothstep(0.0, 0.85, k) * (0.55 + 0.45 * p.y);
+  float br = uBlur * mix(0.3, 1.0, smoothstep(0.0, 0.85, k)) * (0.55 + 0.45 * p.y); // never fully sharp, so thin detail cannot streak at the rim
 
   vec3 col;
   if (uHave > 0.5){
     vec3 acc = vec3(0.0);
+    // Sample a pre-smoothed copy of the frame (mipmaps) so detailed pages blur into soft colour, not stripes.
+    // One texel is 2 CSS px, so this picks the level whose footprint matches the blur radius.
+    float lod = max(0.0, log2(max(br, 1.0)) - 1.0);
     float rot = hash(gl_FragCoord.xy) * 6.2831;
     for (int i = 0; i < 14; i++){
       float fi = float(i);
       float a = fi * 2.39996 + rot;
       float rr = sqrt((fi + 0.5) / 14.0);
-      acc += T(c + off + vec2(cos(a), sin(a)) * rr * br);
+      acc += T(c + off + vec2(cos(a), sin(a)) * rr * br, lod);
     }
     col = acc / 14.0;
     if (uDisp > 0.001){
       float dm = uDisp * f;
-      vec3 rim = vec3(T(c + off * (1.0 + dm * 3.0)).r, T(c + off).g, T(c + off * (1.0 - dm * 3.0)).b);
+      vec3 rim = vec3(T(c + off * (1.0 + dm * 3.0), 0.0).r, T(c + off, 0.0).g, T(c + off * (1.0 - dm * 3.0), 0.0).b);
       col = mix(col, rim, pow(1.0 - k, 1.5));
     }
   } else {
@@ -176,7 +179,7 @@ void main(){
       gl.bindTexture(gl.TEXTURE_2D, this.tex);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
       gl.uniform1i(this.u.uTex, 0);
       canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); this.ok = false; if (this.onLost) this.onLost(); });
@@ -201,6 +204,7 @@ void main(){
       gl.bindTexture(gl.TEXTURE_2D, this.tex);
       gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, u8);
+      gl.generateMipmap(gl.TEXTURE_2D);
       this.cap = { w: f.cw || w * 2, h: f.ch || h * 2 };
       this.have = 1;
       this.p.lum = typeof f.lum === 'number' ? f.lum : 0.5;

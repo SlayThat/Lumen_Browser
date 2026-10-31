@@ -25,6 +25,7 @@ class Tab {
     this.pinned = !!opts.pinned;
     this.upgrade = null;
     this.cssKey = null;
+    this.insetGen = 0;
     this.lastGesture = 0;
     this.ctxParams = null;
     if (opts.sleeping) this.sleeping = true; else this.createView();
@@ -228,12 +229,17 @@ class Tab {
     const wc = this.wc;
     if (!wc) return;
     const px = this.win.inset();
+    const gen = ++this.insetGen;
     const old = this.cssKey;
     this.cssKey = null;
     if (old) wc.removeInsertedCSS(old).catch(() => {});
     if (px > 0) {
       wc.insertCSS(`html{padding-top:${px}px !important;box-sizing:border-box !important;scroll-padding-top:${px}px !important}`)
-        .then(k => { this.cssKey = k; }).catch(() => {});
+        .then(k => {
+          // Two calls close together (navigate + dom-ready): only the newest keeps its CSS, so none is left behind.
+          if (gen === this.insetGen) this.cssKey = k;
+          else { const w = this.wc; if (w) w.removeInsertedCSS(k).catch(() => {}); }
+        }).catch(() => {});
     }
   }
 

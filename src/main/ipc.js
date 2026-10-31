@@ -62,7 +62,7 @@ function register() {
   on('tab:move', (w, o) => { if (o && isInt(o.id) && isInt(o.index)) w.moveTab(o.id, o.index); });
   on('tab:pin', (w, o) => { if (o && isInt(o.id) && isBool(o.pinned)) w.pinTab(o.id, o.pinned); });
   on('tab:duplicate', (w, id) => { const t = isInt(id) && w.findTab(id); if (t) w.newTab(t.url, { opener: t }); });
-  on('tab:closeOthers', (w, id) => { if (!isInt(id)) return; w.tabs.filter(t => t.id !== id).forEach(t => w.closeTab(t.id)); });
+  on('tab:closeOthers', (w, id) => { if (!isInt(id)) return; w.tabs.filter(t => t.id !== id && !t.pinned).forEach(t => w.closeTab(t.id)); });
   on('tab:reload', (w, id) => { const t = isInt(id) && w.findTab(id); if (t) { t.ensureAwake(); t.reload(false); } });
   on('cmd', (w, name, arg) => {
     const allowed = ['newTab', 'closeTab', 'reopenTab', 'reload', 'stop', 'back', 'forward', 'home', 'zoom', 'fullscreen', 'devtools', 'print', 'newWindow', 'newPrivateWindow', 'bookmark'];
