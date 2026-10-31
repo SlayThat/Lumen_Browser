@@ -22,7 +22,10 @@ class Store {
       const raw = JSON.parse(fs.readFileSync(this.file, 'utf8'));
       this.raw = raw;
       this.data = merge(defaults, raw);
-    } catch (e) { /* first run or unreadable: use defaults */ }
+    } catch (e) {
+      // First run: no file. Unreadable file: keep a copy so the next save does not destroy it.
+      if (e && e.code !== 'ENOENT') { try { fs.copyFileSync(this.file, this.file + '.broken'); } catch (e2) { /* nothing to keep */ } }
+    }
   }
   save() {
     clearTimeout(this.timer);
@@ -33,7 +36,8 @@ class Store {
     try {
       const tmp = this.file + '.tmp';
       fs.writeFileSync(tmp, JSON.stringify(this.data));
-      fs.renameSync(tmp, this.file);
+      try { fs.renameSync(tmp, this.file); }
+      catch (e) { fs.writeFileSync(this.file, JSON.stringify(this.data)); } // antivirus or sync tools can block the rename on Windows
     } catch (e) { console.error('Store write failed:', e.message); }
   }
 }

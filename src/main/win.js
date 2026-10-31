@@ -85,8 +85,11 @@ class Win {
     this.bw.on('leave-full-screen', () => this.onFullscreenChange());
     this.bw.on('focus', () => this.captureSoon());
     this.bw.on('close', () => {
+      const others = Array.from(S.windows).some(w => w !== this && !w.closing && !w.isPrivate);
+      // The last normal window saves itself first, so tabs changed in the final moments are restored next time.
+      if (!this.isPrivate && !others) Win.saveSession();
       this.closing = true;
-      if (!this.isPrivate && Array.from(S.windows).some(w => w !== this && !w.closing && !w.isPrivate)) Win.saveSession();
+      if (!this.isPrivate && others) Win.saveSession();
     });
     this.bw.on('closed', () => this.onClosed());
 
