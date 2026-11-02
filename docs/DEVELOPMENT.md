@@ -28,6 +28,18 @@ This was written without being able to run Windows or Electron. The places most 
 
 Send any error message or screenshot back and it can be fixed.
 
+### Linux
+
+Linux support was written without a Linux machine to run it on, so treat it as untested until someone confirms it. Things most likely to need a fix:
+
+1. **Frameless window.** Resizing from the edges and dragging from the tab row depend on the window manager (X11 or Wayland). If the window cannot be resized, try `NATIVE_CAPTION_BUTTONS: true` in `config.js`.
+2. **Transparent UI view.** Needs a compositing window manager. Without one the toolbar may show a solid box.
+3. **Browser sandbox.** The `.deb` sets up Chromium's sandbox. The AppImage cannot, and on Ubuntu 24.04 and newer the system may block it. Lumen does not turn the sandbox off.
+4. **WebGL.** On virtual machines or old drivers Lumen falls back to the plain theme.
+5. **Default browser.** `app.setAsDefaultProtocolClient` needs the installed `lumen-browser.desktop` file, so it works from the `.deb` and not from a bare AppImage on some systems.
+
+Run it with `npm start`, build with `npm run dist:linux`.
+
 ## If the screen goes black or flickers
 
 A black screen for a few seconds usually means the graphics driver reset. Lumen asks for the low-power GPU, captures the page at most about 8 times a second, and if Chromium's graphics process crashes it turns Glass off for that session (your saved setting is kept, so Glass comes back on the next start).

@@ -41,8 +41,19 @@ function parseHtmlBookmarks(text) {
   return out;
 }
 
-// Where each browser keeps its default profile on Windows.
-function bookmarkFiles(env) {
+// Where each browser keeps its default profile: Windows (%LOCALAPPDATA%) or Linux (~/.config).
+function bookmarkFiles(env, platform) {
+  const plat = platform || process.platform;
+  if (plat === 'linux') {
+    const cfg = env.XDG_CONFIG_HOME || (env.HOME ? path.join(env.HOME, '.config') : '');
+    if (!cfg) return {};
+    const g = (...p) => path.join(cfg, ...p, 'Default', 'Bookmarks');
+    return {
+      chrome: g('google-chrome'),
+      edge: g('microsoft-edge'),
+      brave: g('BraveSoftware', 'Brave-Browser')
+    };
+  }
   const local = env.LOCALAPPDATA || '';
   if (!local) return {};
   const f = (...p) => path.join(local, ...p, 'User Data', 'Default', 'Bookmarks');

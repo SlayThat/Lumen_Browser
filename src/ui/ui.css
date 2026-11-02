@@ -3,7 +3,7 @@
   --fg:#0b1118; --fg2:rgba(11,17,24,.62); --hover:rgba(11,17,24,.075); --press:rgba(11,17,24,.13);
   --field:rgba(11,17,24,.065); --accent:#0a62d6; --accent-fg:#fff; --danger:#c42b1c;
   --tint:#f6f8fb; --solid:#eef1f6; --edge:rgba(11,17,24,.14); --sheetbg:rgba(246,248,251,.38);
-  --font:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;
+  --font:"Segoe UI Variable Text","Segoe UI",system-ui,"Ubuntu","Cantarell","Noto Sans",sans-serif;
   --display:"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;
   --strip:92px;
   color-scheme:light;
