@@ -57,9 +57,10 @@ const files = imp.bookmarkFiles({ LOCALAPPDATA: 'C:\\Users\\u\\AppData\\Local' }
 assert(files.chrome.includes('Chrome') && files.edge.includes('Edge') && files.brave.includes('Brave'));
 assert.deepStrictEqual(imp.bookmarkFiles({}, 'win32'), {});
 // Linux profile folders
-const lx = imp.bookmarkFiles({ HOME: '/home/u' }, 'linux');
+const fwd = (o) => { const r = {}; for (const k of Object.keys(o)) r[k] = o[k].replace(/\\/g, '/'); return r; }; // path.join uses \ on a Windows test machine
+const lx = fwd(imp.bookmarkFiles({ HOME: '/home/u' }, 'linux'));
 assert(lx.chrome.endsWith('google-chrome/Default/Bookmarks') && lx.edge.includes('microsoft-edge') && lx.brave.includes('BraveSoftware'));
 assert(lx.chrome.startsWith('/home/u/.config'));
-assert(imp.bookmarkFiles({ HOME: '/home/u', XDG_CONFIG_HOME: '/x/cfg' }, 'linux').chrome.startsWith('/x/cfg'));
+assert(fwd(imp.bookmarkFiles({ HOME: '/home/u', XDG_CONFIG_HOME: '/x/cfg' }, 'linux')).chrome.startsWith('/x/cfg'));
 assert.deepStrictEqual(imp.bookmarkFiles({}, 'linux'), {});
 console.log('netfilter + importer tests passed');
