@@ -20,8 +20,8 @@ Linux support is new and has had less testing than Windows. If something does no
 
 Download one of these from the [Releases page](../../releases):
 
-- `Lumen-<version>-linux-x64.deb`: for Debian, Ubuntu, Linux Mint and similar. Install it with `sudo apt install ./Lumen-<version>-linux-x64.deb`. Recommended, and it adds Lumen to your applications menu. Update by installing the newer file.
-- `Lumen-<version>-linux-x64.AppImage`: runs on most distributions without installing. Make it runnable with `chmod +x Lumen-<version>-linux-x64.AppImage`, then double-click it or run it. It updates itself. On Ubuntu 24.04 and newer the system may block the AppImage's browser sandbox; if it will not start, use the `.deb` instead.
+- `Lumen-<version>-linux-amd64.deb`: for Debian, Ubuntu, Linux Mint and similar. Install it with `sudo apt install ./Lumen-<version>-linux-amd64.deb`. Recommended, and it adds Lumen to your applications menu. Update by installing the newer file.
+- `Lumen-<version>-linux-x86_64.AppImage`: runs on most distributions without installing. Make it runnable with `chmod +x Lumen-<version>-linux-x86_64.AppImage`, then double-click it or run it. It updates itself. On Ubuntu 24.04 and newer the system may block the AppImage's browser sandbox; if it will not start, use the `.deb` instead.
 
 Only 64-bit Intel and AMD (x64) is built for now. If the glass looks flat or the toolbar is solid, your graphics drivers may not support it; Lumen then falls back to a plain theme on its own.
 
