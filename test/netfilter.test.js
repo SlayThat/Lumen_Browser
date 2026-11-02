@@ -53,7 +53,13 @@ let n = 0;
 const added = imp.mergeBookmarks(items, c.concat(c), 5, () => 'id' + (n++));
 assert.strictEqual(added, 2); assert.strictEqual(items.length, 3);
 assert.strictEqual(imp.mergeBookmarks(items, c, 5, () => 'q'), 0, 'importing twice adds nothing');
-const files = imp.bookmarkFiles({ LOCALAPPDATA: 'C:\\Users\\u\\AppData\\Local' });
+const files = imp.bookmarkFiles({ LOCALAPPDATA: 'C:\\Users\\u\\AppData\\Local' }, 'win32');
 assert(files.chrome.includes('Chrome') && files.edge.includes('Edge') && files.brave.includes('Brave'));
-assert.deepStrictEqual(imp.bookmarkFiles({}), {});
+assert.deepStrictEqual(imp.bookmarkFiles({}, 'win32'), {});
+// Linux profile folders
+const lx = imp.bookmarkFiles({ HOME: '/home/u' }, 'linux');
+assert(lx.chrome.endsWith('google-chrome/Default/Bookmarks') && lx.edge.includes('microsoft-edge') && lx.brave.includes('BraveSoftware'));
+assert(lx.chrome.startsWith('/home/u/.config'));
+assert(imp.bookmarkFiles({ HOME: '/home/u', XDG_CONFIG_HOME: '/x/cfg' }, 'linux').chrome.startsWith('/x/cfg'));
+assert.deepStrictEqual(imp.bookmarkFiles({}, 'linux'), {});
 console.log('netfilter + importer tests passed');

@@ -1,6 +1,6 @@
 # Lumen
 
-A fast, simple web browser for Windows 10 and 11 with a **Liquid Glass** toolbar: the tabs and address bar are see-through glass that bends and blurs the page behind them.
+A fast, simple web browser for Windows 10 and 11 and for Linux with a **Liquid Glass** toolbar: the tabs and address bar are see-through glass that bends and blurs the page behind them.
 
 Lumen is built on Chromium (through Electron), so websites work the way they do in Chrome or Edge. It is free and open source (MIT licence).
 
@@ -14,7 +14,18 @@ Lumen is built on Chromium (through Electron), so websites work the way they do 
    - `Lumen-<version>-portable.exe`: runs without installing. It does not update itself. Use one of the two, not both.
 3. Run it. If Windows shows a blue SmartScreen box, see the note above.
 
-To make Lumen your main browser, open Lumen, go to **Settings > General > Make default**, and choose Lumen in the Windows page that opens.
+### Linux (new, needs testing)
+
+Linux support is new and has had less testing than Windows. If something does not work, please [open an issue](../../issues) and say which distribution you use.
+
+Download one of these from the [Releases page](../../releases):
+
+- `Lumen-<version>-linux-x64.deb`: for Debian, Ubuntu, Linux Mint and similar. Install it with `sudo apt install ./Lumen-<version>-linux-x64.deb`. Recommended, and it adds Lumen to your applications menu. Update by installing the newer file.
+- `Lumen-<version>-linux-x64.AppImage`: runs on most distributions without installing. Make it runnable with `chmod +x Lumen-<version>-linux-x64.AppImage`, then double-click it or run it. It updates itself. On Ubuntu 24.04 and newer the system may block the AppImage's browser sandbox; if it will not start, use the `.deb` instead.
+
+Only 64-bit Intel and AMD (x64) is built for now. If the glass looks flat or the toolbar is solid, your graphics drivers may not support it; Lumen then falls back to a plain theme on its own.
+
+To make Lumen your main browser, open Lumen, go to **Settings > General > Make default**. On Windows, choose Lumen in the page that opens. On Linux it is set for you; if it does not stick, open your system's Default applications settings.
 
 ## Is Lumen safe?
 
@@ -64,12 +75,13 @@ Some antivirus and sandbox services flag new, unsigned installers like this one 
 
 ## Build it yourself
 
-You need Windows 10 or 11 and Node.js 20 or newer.
+You need Node.js 20 or newer, on Windows 10 or 11 or on Linux.
 
 ```
 npm install
 npm start          # run Lumen
-npm run dist       # build the installer and portable exe into dist/
+npm run dist:win    # on Windows: build the installer and portable exe into dist/
+npm run dist:linux  # on Linux: build the AppImage and .deb into dist/
 npm test           # run the unit tests
 ```
 

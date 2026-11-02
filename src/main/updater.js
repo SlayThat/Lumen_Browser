@@ -1,5 +1,5 @@
 'use strict';
-// Auto-update for installed (NSIS) copies. Portable and development runs skip it quietly.
+// Auto-update for the installed Windows copy and for the Linux AppImage. Portable, .deb and development runs skip it quietly.
 const { app } = require('electron');
 const S = require('./state');
 
@@ -7,12 +7,15 @@ let started = false;
 let manualCheck = false; // whether the check in progress was started by the user (decides which toasts show)
 
 function available() {
-  return app.isPackaged && !process.env.PORTABLE_EXECUTABLE_FILE && process.platform === 'win32';
+  if (!app.isPackaged) return false;
+  if (process.platform === 'win32') return !process.env.PORTABLE_EXECUTABLE_FILE;
+  if (process.platform === 'linux') return !!process.env.APPIMAGE;
+  return false;
 }
 
 function check(manual) {
   if (!available()) {
-    if (manual) S.broadcast('toast', { text: 'Updates work in the installed version of Lumen.' });
+    if (manual) S.broadcast('toast', { text: process.platform === 'linux' ? 'Automatic updates work in the AppImage. For the .deb, download the new version from the website.' : 'Updates work in the installed version of Lumen.' });
     return;
   }
   manualCheck = !!manual;

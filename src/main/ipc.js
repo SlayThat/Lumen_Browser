@@ -150,7 +150,14 @@ function register() {
   // ---- default browser / updates ----
   on('app:defaultBrowser', (w) => {
     try { app.setAsDefaultProtocolClient('http'); app.setAsDefaultProtocolClient('https'); } catch (e) { /* the settings page still opens */ }
-    shell.openExternal('ms-settings:defaultapps').catch(() => w.toast('Open Windows Settings, then Default apps, and choose Lumen'));
+    if (process.platform === 'win32') {
+      shell.openExternal('ms-settings:defaultapps').catch(() => w.toast('Open Windows Settings, then Default apps, and choose Lumen'));
+    } else {
+      // Linux: the request above updates the desktop's default; tell the person whether it took.
+      let ok = false;
+      try { ok = app.isDefaultProtocolClient('https'); } catch (e) { /* unknown */ }
+      w.toast(ok ? 'Lumen is now your default browser.' : 'Could not set it from here. Open your system settings, then Default applications, and choose Lumen.');
+    }
   });
   on('app:checkUpdate', (w) => require('./updater').check(true));
 

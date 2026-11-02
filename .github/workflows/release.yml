@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags: ['v*']
-  workflow_dispatch:
+  workflow_dispatch:    # run it by hand to test the builds; nothing is published without a tag
 
 permissions:
   contents: write
@@ -11,7 +11,7 @@ permissions:
   attestations: write
 
 jobs:
-  build:
+  windows:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,14 +21,14 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npm run check
       - run: npm test
-      - run: npm run dist
+      - run: npm run dist:win
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
       - name: Checksums
         shell: pwsh
         run: |
-          Get-FileHash dist\*.exe -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLower())  $(Split-Path $_.Path -Leaf)" } | Out-File -Encoding ascii dist\SHA256SUMS.txt
-          Get-Content dist\SHA256SUMS.txt
+          Get-FileHash dist\*.exe -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLower())  $(Split-Path $_.Path -Leaf)" } | Out-File -Encoding ascii dist\SHA256SUMS-windows.txt
+          Get-Content dist\SHA256SUMS-windows.txt
       - name: Attest build provenance
         uses: actions/attest-build-provenance@v2
         with:
@@ -38,16 +38,68 @@ jobs:
           name: lumen-windows
           path: |
             dist/*.exe
+            dist/*.blockmap
             dist/latest.yml
-            dist/SHA256SUMS.txt
+            dist/SHA256SUMS-windows.txt
       # Unsigned for now. After SignPath approval, add its signing step here
-      # (signpath/github-action-submit-signing-request) before the release step.
+      # (signpath/github-action-submit-signing-request) before the release job.
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm run check
+      - run: npm test
+      - run: npm run dist:linux
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Checksums
+        run: |
+          cd dist
+          sha256sum *.AppImage *.deb | tee SHA256SUMS-linux.txt
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            dist/*.AppImage
+            dist/*.deb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lumen-linux
+          path: |
+            dist/*.AppImage
+            dist/*.deb
+            dist/latest-linux.yml
+            dist/SHA256SUMS-linux.txt
+
+  release:
+    needs: [windows, linux]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - name: Combine checksums
+        run: |
+          cd out
+          cat SHA256SUMS-windows.txt SHA256SUMS-linux.txt > SHA256SUMS.txt
+          rm SHA256SUMS-windows.txt SHA256SUMS-linux.txt
+          cat SHA256SUMS.txt
+          ls -la
       - name: Publish GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/*.exe
-            dist/latest.yml
-            dist/SHA256SUMS.txt
-            dist/*.blockmap
+            out/*.exe
+            out/*.AppImage
+            out/*.deb
+            out/latest.yml
+            out/latest-linux.yml
+            out/SHA256SUMS.txt
+            out/*.blockmap

@@ -42,7 +42,7 @@ const S = {
   // Settings as the UI and capture loop should see them (Glass is forced off after a GPU crash).
   view() {
     const d = this.settings.data;
-    return Object.assign({}, d, { adblockCount: this.blockedCount }, this.gpuDown ? { glassMode: 'off' } : {});
+    return Object.assign({}, d, { adblockCount: this.blockedCount, platform: process.platform }, this.gpuDown ? { glassMode: 'off' } : {});
   },
   flushAll() {
     for (const s of [this.settings, this.history, this.bookmarks, this.sessionStore, this.permissions]) if (s) s.flush();

@@ -23,7 +23,7 @@ const BASE_CSS = `
 @media (prefers-color-scheme:dark){:root{--bg:#10141b;--fg:#eef2f7;--fg2:rgba(238,242,247,.64);--card:rgba(255,255,255,.07);--line:rgba(255,255,255,.14);--accent:#6cb2ff;--b1:#1f7a70;--b2:#9a5a1e;--b3:#3b4fb8}}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
-body{background:var(--bg);color:var(--fg);font:15px/1.5 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 "Segoe UI Variable Text","Segoe UI",system-ui,"Ubuntu","Cantarell","Noto Sans",sans-serif}
 `;
 
 function renderNewTab({ engineUrl, engineName, sites }) {

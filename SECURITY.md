@@ -22,8 +22,8 @@ Lumen is new, so it has no reputation yet, and the installer is not code-signed 
 
 Each release lists SHA-256 checksums in `SHA256SUMS.txt`, and the files are built by GitHub Actions from the public source with a signed build attestation.
 
-1. Compare the hash. In PowerShell: `Get-FileHash .\Lumen-<version>-x64.exe -Algorithm SHA256`, then compare it with the line in `SHA256SUMS.txt` on the release page.
-2. Verify the attestation (needs the GitHub CLI): `gh attestation verify .\Lumen-<version>-x64.exe --repo SlayThat/Lumen_Browser`.
+1. Compare the hash. On Linux: `sha256sum Lumen-<version>-linux-x64.deb`, then compare it with the line in `SHA256SUMS.txt`. In PowerShell on Windows: `Get-FileHash .\Lumen-<version>-x64.exe -Algorithm SHA256`, then compare it with the line in `SHA256SUMS.txt` on the release page.
+2. Verify the attestation (needs the GitHub CLI; on Linux use the `.deb` or `.AppImage` file name): `gh attestation verify .\Lumen-<version>-x64.exe --repo SlayThat/Lumen_Browser`.
 3. Only download from this repository's **Releases** page.
 
 You can also build it yourself from the source, which is described in the README.

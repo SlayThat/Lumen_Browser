@@ -41,7 +41,7 @@ class Win {
     this.bw = new BrowserWindow(Object.assign({
       width: 1320, height: 860, minWidth: 520, minHeight: 380,
       show: false, title: C.APP_NAME, autoHideMenuBar: true,
-      icon: path.join(__dirname, '..', 'assets', 'icon.ico'),
+      icon: path.join(__dirname, '..', 'assets', process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
       backgroundColor: this.windowBg()
     }, native
       ? { titleBarStyle: 'hidden', titleBarOverlay: { color: '#00000000', symbolColor: this.symbolColor(), height: C.CAPTION_H } }

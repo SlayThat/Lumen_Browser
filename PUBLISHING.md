@@ -62,8 +62,8 @@ Not built yet, in rough order of how much users will notice:
 
 1. Bump `version` in `package.json`, commit and push.
 2. Tag it: `git tag v0.1.1 && git push origin v0.1.1`.
-3. The Release workflow builds on Windows and attaches the installer, portable exe and `latest.yml` to a GitHub Release.
-4. Installed copies (the NSIS `.exe`) update themselves from that release. The portable build does not self-update.
+3. The Release workflow builds on Windows and on Linux, then attaches the installer, portable exe, AppImage, .deb, `latest.yml`, `latest-linux.yml` and one combined `SHA256SUMS.txt` to a GitHub Release. To test the builds without publishing, run the workflow by hand from the Actions tab (it publishes nothing without a tag).
+4. Installed copies (the NSIS `.exe`) and the Linux AppImage update themselves from that release. The portable build and the `.deb` do not self-update.
 
 Default browser: the installer registers Lumen under Windows Default apps. Windows does not let apps set themselves as default, so Settings > Make default opens the Windows page where the user picks Lumen. Not tested on a real Windows machine.
 
