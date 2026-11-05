@@ -20,6 +20,10 @@ function build(tab, p) {
     add('copyLink', 'Copy link address');
     sep();
   }
+  if (p.mediaType === 'video') {
+    add('pip', 'Picture in picture');
+    sep();
+  }
   if (p.mediaType === 'image' && p.srcURL) {
     add('openImage', 'Open image in new tab');
     add('saveImage', 'Save image');
@@ -59,6 +63,7 @@ function run(win, tab, p, id) {
     case 'openLink': win.newTab(p.linkURL, { background: true, opener: tab }); win.toast('Opened in a new tab'); break;
     case 'copyLink': clipboard.writeText(p.linkURL); break;
     case 'openImage': win.newTab(p.srcURL, { background: true, opener: tab }); break;
+    case 'pip': tab.pip(p.x, p.y); break;
     case 'saveImage': wc.downloadURL(p.srcURL); break;
     case 'copyImage': wc.copyImageAt(p.x, p.y); break;
     case 'copyImageUrl': clipboard.writeText(p.srcURL); break;

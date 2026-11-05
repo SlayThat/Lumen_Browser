@@ -63,6 +63,11 @@ function register() {
   on('tab:pin', (w, o) => { if (o && isInt(o.id) && isBool(o.pinned)) w.pinTab(o.id, o.pinned); });
   on('tab:duplicate', (w, id) => { const t = isInt(id) && w.findTab(id); if (t) w.newTab(t.url, { opener: t }); });
   on('tab:closeOthers', (w, id) => { if (!isInt(id)) return; w.tabs.filter(t => t.id !== id && !t.pinned).forEach(t => w.closeTab(t.id)); });
+  on('tab:mute', (w, o) => { const t = o && isInt(o.id) && isBool(o.muted) && w.findTab(o.id); if (t) t.setMuted(o.muted); });
+  on('tab:closeRight', (w, id) => {
+    const i = isInt(id) ? w.tabs.findIndex(t => t.id === id) : -1;
+    if (i >= 0) w.tabs.slice(i + 1).filter(t => !t.pinned).forEach(t => w.closeTab(t.id));
+  });
   on('tab:reload', (w, id) => { const t = isInt(id) && w.findTab(id); if (t) { t.ensureAwake(); t.reload(false); } });
   on('cmd', (w, name, arg) => {
     const allowed = ['newTab', 'closeTab', 'reopenTab', 'reload', 'stop', 'back', 'forward', 'home', 'zoom', 'fullscreen', 'devtools', 'print', 'newWindow', 'newPrivateWindow', 'bookmark'];
