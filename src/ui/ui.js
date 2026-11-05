@@ -202,9 +202,12 @@
       openMenu($('ctx'), [
         { label: 'Reload tab', run: () => L.send('tab:reload', t.id) },
         { label: 'Duplicate tab', run: () => L.send('tab:duplicate', t.id) },
+        { label: t.muted ? 'Unmute tab' : 'Mute tab', run: () => L.send('tab:mute', { id: t.id, muted: !t.muted }) },
+        { label: 'Copy tab address', enabled: !!t.url && !/^lumen:/.test(t.url), run: () => L.send('clipboard:copy', t.url) },
         { label: t.pinned ? 'Unpin tab' : 'Pin tab', run: () => L.send('tab:pin', { id: t.id, pinned: !t.pinned }) },
         { sep: true },
         { label: 'Close tab', run: () => L.send('tab:close', t.id) },
+        { label: 'Close tabs to the right', enabled: S.tabs.findIndex(x => x.id === t.id) < S.tabs.length - 1, run: () => L.send('tab:closeRight', t.id) },
         { label: 'Close other tabs', enabled: S.tabs.length > 1, run: () => L.send('tab:closeOthers', t.id) }
       ], e.clientX, e.clientY);
     });
@@ -230,7 +233,11 @@
     if (sel) el.dataset.glass = '0.45'; else delete el.dataset.glass;
     el.title = (t.sleeping ? 'Sleeping: ' : '') + t.title;
     el.querySelector('.ttitle').textContent = t.title;
-    el.querySelector('.tsound').hidden = !t.audible;
+    const snd = el.querySelector('.tsound');
+    snd.hidden = !(t.audible || t.muted);
+    snd.classList.toggle('muted', !!t.muted);
+    snd.title = t.muted ? 'Unmute tab' : 'Mute tab';
+    snd.onclick = (e) => { e.stopPropagation(); L.send('tab:mute', { id: t.id, muted: !t.muted }); };
     const key = (t.loading ? 'L' : (t.favicon || ('F' + hostOf(t.url))));
     if (el._fav !== key) {
       el._fav = key;

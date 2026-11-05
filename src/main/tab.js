@@ -18,6 +18,7 @@ class Tab {
     this.favicon = '';
     this.loading = false;
     this.audible = false;
+    this.muted = !!opts.muted;
     this.view = null;
     this.sleeping = false;
     this.lastActive = Date.now();
@@ -47,6 +48,7 @@ class Tab {
     this.view = view;
     this.sleeping = false;
     S.wcToTab.set(view.webContents.id, this);
+    if (this.muted) view.webContents.setAudioMuted(true);
     this.bind(view.webContents);
     this.load(this.url);
   }
@@ -180,6 +182,37 @@ class Tab {
     this.load(r.url);
     this.win.pushState();
   }
+  setMuted(on) {
+    this.muted = !!on;
+    const wc = this.wc;
+    if (wc) wc.setAudioMuted(this.muted);
+    this.win.pushState();
+  }
+  // Picture-in-picture for the video under the pointer, or the biggest playing one.
+  pip(x, y) {
+    const wc = this.wc;
+    if (!wc) return;
+    const px = Number.isFinite(x) ? x : -1, py = Number.isFinite(y) ? y : -1;
+    const code = `(function(){
+      var v = null, el = (${px} >= 0) ? document.elementFromPoint(${px}, ${py}) : null;
+      if (el && el.tagName === 'VIDEO') v = el;
+      if (!v) {
+        var best = 0;
+        document.querySelectorAll('video').forEach(function (c) {
+          var r = c.getBoundingClientRect(), a = r.width * r.height;
+          if (a > best && c.readyState > 0) { best = a; v = c; }
+        });
+      }
+      if (!v) return 'none';
+      if (document.pictureInPictureElement === v) { document.exitPictureInPicture(); return 'closed'; }
+      if (!document.pictureInPictureEnabled || v.disablePictureInPicture) return 'unsupported';
+      return v.requestPictureInPicture().then(function(){ return 'ok'; }, function(){ return 'failed'; });
+    })()`;
+    wc.executeJavaScript(code, true).then(r => {
+      if (r === 'none') this.win.toast('No video found on this page');
+      else if (r === 'unsupported' || r === 'failed') this.win.toast('This video cannot open in a small window');
+    }).catch(() => this.win.toast('This video cannot open in a small window'));
+  }
   back() { const wc = this.wc; if (wc && wc.navigationHistory.canGoBack()) wc.navigationHistory.goBack(); }
   forward() { const wc = this.wc; if (wc && wc.navigationHistory.canGoForward()) wc.navigationHistory.goForward(); }
   reload(hard) { const wc = this.wc; if (!wc) return; if (this.errorFor) { this.load(this.errorFor); return; } hard ? wc.reloadIgnoringCache() : wc.reload(); }
@@ -267,7 +300,7 @@ class Tab {
   info() {
     let title = this.title;
     if (!title) title = this.url === NEWTAB ? 'New Tab' : (hostOf(this.url) || this.url || 'New Tab');
-    return { id: this.id, title, url: this.url, favicon: this.favicon, loading: this.loading, sleeping: this.sleeping, audible: this.audible, pinned: this.pinned };
+    return { id: this.id, title, url: this.url, favicon: this.favicon, loading: this.loading, sleeping: this.sleeping, audible: this.audible, muted: this.muted, pinned: this.pinned };
   }
 }
 
