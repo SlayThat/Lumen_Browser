@@ -222,3 +222,4 @@ html[data-mode="off"] #sheet{background:var(--solid)!important}
 /* The glass pill reads the opacity of its own element, so the fade has to be on #bmbar itself. */
 #bmbar{transition:opacity .16s}
 html.sheetopen #bmbar{opacity:0;pointer-events:none}
+.srowbtns{display:flex;gap:8px;flex:none}

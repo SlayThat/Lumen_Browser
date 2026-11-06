@@ -833,7 +833,7 @@
         h('div', { class: 'srow' }, h('div', { class: 'sl' }, 'Default browser', h('small', { text: s.platform === 'win32' ? 'Opens Windows Settings, where you choose Lumen for web links.' : 'Sets Lumen as the app that opens web links.' })),
           actionButton('Make default', () => L.send('app:defaultBrowser'))),
         h('div', { class: 'srow' }, h('div', { class: 'sl' }, 'Updates', h('small', { text: s.platform === 'win32' ? 'Lumen checks on its own at startup. Installed copies only.' : 'Lumen checks on its own at startup. AppImage only.' })),
-          actionButton('Check now', () => L.send('app:checkUpdate'))),
+          h('span', { class: 'srowbtns' }, actionButton('What’s new', () => L.send('tab:new', 'lumen://whatsnew')), actionButton('Check now', () => L.send('app:checkUpdate')))),
         toggle('Show bookmarks bar', null, s.bookmarksBar, 'bookmarksBar'),
         importRow(),
         toggle('Restore tabs on launch', null, s.restoreSession, 'restoreSession'),

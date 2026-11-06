@@ -40,6 +40,8 @@ function lumenHandler(isUi) {
         const eng = C.ENGINES[set.searchEngine] || C.ENGINES.duckduckgo;
         return htmlResponse(pages.renderNewTab({ engineUrl: eng.url, engineName: eng.name, sites: S.topSites(8) }));
       }
+      case 'whatsnew':
+        return htmlResponse(pages.renderWhatsNew(require('electron').app.getVersion()));
       case 'error': {
         const q = u.searchParams;
         const url = q.get('url') || '';
