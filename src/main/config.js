@@ -37,6 +37,7 @@ module.exports = {
     adblock: true,              // block third-party ad and tracker hosts
     httpsFirst: true,           // try https for http:// addresses, fall back if the site has none
     bookmarksBar: true,
+    lastSeenVersion: '',        // the version whose "What's new" page was last offered
     zoom: {}                    // host -> factor
   }
 };

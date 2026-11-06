@@ -40,6 +40,7 @@ if (!app.requestSingleInstanceLock()) {
 
   app.whenReady().then(() => {
     S.init();
+    const firstRun = !S.settings.raw;
     Menu.setApplicationMenu(null);
     nativeTheme.themeSource = S.settings.data.theme;
     Win = require('./win').Win;
@@ -53,6 +54,14 @@ if (!app.requestSingleInstanceLock()) {
     } else {
       new Win({ url: argvUrl });
     }
+
+    // After an update, show what changed once.
+    const cur = app.getVersion();
+    if (require('./whatsnew').shouldShow({ lastSeen: S.settings.data.lastSeenVersion, current: cur, firstRun })) {
+      const w = S.allWins().find(x => !x.closed && !x.isPrivate);
+      if (w) w.newTab('lumen://whatsnew');
+    }
+    if (S.settings.data.lastSeenVersion !== cur) { S.settings.data.lastSeenVersion = cur; S.settings.save(); }
 
     setTimeout(() => require('./updater').check(false), 15000);
     setInterval(() => S.allWins().forEach(w => { if (!w.closed) w.sleepTick(); }), 60000);

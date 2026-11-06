@@ -125,4 +125,8 @@ function renderProceed(url) {
 <script nonce="${n}">location.replace(${JSON.stringify(url)})</script></body></html>`;
 }
 
-module.exports = { renderNewTab, renderError, renderProceed };
+function renderWhatsNew(version) {
+  return require('./whatsnew').render(version, { BASE_CSS, nonce, csp, LOGO });
+}
+
+module.exports = { renderNewTab, renderError, renderProceed, renderWhatsNew };
