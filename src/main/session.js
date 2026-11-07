@@ -9,22 +9,27 @@ const C = require('./config');
 const { hostOf } = require('./omnibox');
 const pages = require('./pages');
 const nf = require('./netfilter');
+const safety = require('./safety');
 
 const UI_ROOT = path.join(__dirname, '..', 'ui');
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png' };
 
+// Lumen's own pages are never shown inside another page, never sniffed, and send no referrer.
+const SAFE_HEADERS = { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-frame-options': 'DENY', 'referrer-policy': 'no-referrer', 'content-security-policy': "frame-ancestors 'none'" };
 function htmlResponse(body) {
-  return new Response(body, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
+  return new Response(body, { headers: Object.assign({ 'content-type': 'text/html; charset=utf-8' }, SAFE_HEADERS) });
 }
 
 async function serveStatic(pathname) {
-  let rel = decodeURIComponent(pathname || '/');
+  let rel;
+  try { rel = decodeURIComponent(pathname || '/'); } catch (e) { return new Response('Bad request', { status: 400 }); }
+  if (rel.includes('\0')) return new Response('Bad request', { status: 400 });
   if (rel === '/' || rel === '') rel = '/index.html';
   const file = path.normalize(path.join(UI_ROOT, rel));
   if (!file.startsWith(UI_ROOT + path.sep)) return new Response('Forbidden', { status: 403 });
   try {
     const data = await fs.promises.readFile(file);
-    return new Response(data, { headers: { 'content-type': MIME[path.extname(file)] || 'application/octet-stream', 'cache-control': 'no-store' } });
+    return new Response(data, { headers: Object.assign({ 'content-type': MIME[path.extname(file)] || 'application/octet-stream' }, SAFE_HEADERS) });
   } catch (e) { return new Response('Not found', { status: 404 }); }
 }
 
@@ -96,7 +101,7 @@ function uniquePath(dir, name) {
 function setupDownloads(ses) {
   ses.on('will-download', (event, item) => {
     const dir = app.getPath('downloads');
-    const savePath = uniquePath(dir, item.getFilename() || 'download');
+    const savePath = uniquePath(dir, safety.safeFileName(item.getFilename()));
     item.setSavePath(savePath);
     const rec = { id: S.nextDownloadId++, name: path.basename(savePath), path: savePath, url: item.getURL(), total: item.getTotalBytes(), received: 0, state: 'progressing', time: Date.now(), item };
     S.downloads.unshift(rec);
@@ -178,6 +183,12 @@ function prepare(partition, opts) {
     } catch (e) { /* never let a filter bug stop browsing */ }
     callback({});
   });
+
+  // No page may talk to USB, serial, HID or Bluetooth devices.
+  ses.setDevicePermissionHandler(() => false);
+  ses.on('select-hid-device', (e, d, cb) => { e.preventDefault(); cb(); });
+  ses.on('select-serial-port', (e, l, wc, cb) => { e.preventDefault(); cb(''); });
+  ses.on('select-usb-device', (e, d, cb) => { e.preventDefault(); cb(); });
 
   setupDownloads(ses);
   return ses;

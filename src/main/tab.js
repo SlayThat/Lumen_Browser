@@ -4,6 +4,7 @@ const S = require('./state');
 const C = require('./config');
 const { classify, hostOf } = require('./omnibox');
 const nf = require('./netfilter');
+const safety = require('./safety');
 
 let nextTabId = 1;
 const GESTURE_MS = 1500;
@@ -160,11 +161,7 @@ class Tab {
     wc.on('leave-html-full-screen', () => win.setHtmlFullscreen(false));
   }
 
-  navAllowed(url, from) {
-    if (/^(https?|file|about|view-source|blob|data):/i.test(url)) return true;
-    if (/^lumen:/i.test(url)) return /^lumen:/i.test(from) || from === '' || from === 'about:blank';
-    return false;
-  }
+  navAllowed(url, from) { return safety.navAllowed(url, from); }
 
   showError(desc, code, url) {
     const wc = this.wc;

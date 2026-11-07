@@ -12,7 +12,13 @@ Lumen is a Chromium-based browser (Electron). Its own code is in `src/`, and you
 - The only connection Lumen makes that you did not ask for is the update check, which asks GitHub Releases whether a newer version exists (installed copy only).
 - It does not run other programs or read other programs' files. It writes to the registry only to register itself as a browser option for Windows (in the installer, and when you press **Make default**).
 - It reads another browser's bookmarks file only when you press **Import** in Settings, and only the bookmarks (not passwords, cookies or history). You can also import from a file you choose yourself.
-- Pages run in sandboxed processes with Node.js turned off. Camera, microphone, location and similar permissions ask first.
+- Pages run in sandboxed processes with Node.js turned off. Camera, microphone, location and similar permissions ask first. USB, serial, HID and Bluetooth access is always refused.
+- Downloads: the file name is cleaned before it is saved, and Lumen never opens programs or scripts (such as .exe, .msi, .bat, .ps1, .sh, .AppImage or .deb files) for you. They are shown in their folder, and you start them yourself.
+- Navigation: a web page cannot send the tab to `file:`, `data:` or `lumen:` addresses, and `javascript:` and other app links are blocked.
+- Lumen's own pages cannot be shown inside another site, and the interface can only send the messages on a fixed allow-list, which the main process checks again.
+- Release builds turn off Electron's Node mode (`ELECTRON_RUN_AS_NODE`), the `NODE_OPTIONS` variable and `--inspect` flags, and load code only from the packed app archive. Updates never install an older version.
+
+What Lumen does not do yet: it has no malware or phishing-site list (like Chrome's Safe Browsing), the Windows installer is not code-signed, and it does not check an installed file's integrity at startup. Keep Lumen updated, because browser security fixes come from Chromium through Electron.
 
 ## Why scanners sometimes flag the installer
 

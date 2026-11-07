@@ -23,6 +23,8 @@ function check(manual) {
   try { ({ autoUpdater } = require('electron-updater')); } catch (e) { return; }
   if (!started) {
     started = true;
+    autoUpdater.allowDowngrade = false;   // never install an older version
+    autoUpdater.allowPrerelease = false;
     autoUpdater.autoDownload = true;
     autoUpdater.autoInstallOnAppQuit = true;
     autoUpdater.on('update-available', i => S.broadcast('toast', { text: 'Downloading Lumen ' + i.version + '…' }));
