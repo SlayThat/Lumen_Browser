@@ -5,6 +5,10 @@
 //
 // feature: { chip, title, text, steps?: [..], art?: 'newtab' | 'whatsnew' | 'downloads' | 'menu' | 'rows', rows?: [[label, state], ..], color: 1-4 }
 const NOTES = [
+  { version: '0.7.1', features: [
+    { chip: 'A new icon', title: 'A new Lumen icon', color: 1, art: 'rows', rows: [['Taskbar and desktop', 'New icon'], ['Installer', 'New icon'], ['New tab and What’s new pages', 'New icon']],
+      text: 'Lumen has a new icon: two overlapping sheets of glass, one blue and one amber. It is simpler, reads clearly at small sizes and matches the new look of the browser.' }
+  ] },
   { version: '0.7.0', features: [
     { chip: 'Extensions (experimental)', title: 'Add extensions from the Chrome Web Store', color: 1, art: 'rows', rows: [['Dark mode for every site', 'Extension'], ['Password manager', 'Extension'], ['Translate a page', 'Extension']],
       text: 'Lumen can now run Chrome extensions. It is experimental and off by default, so Lumen works exactly as before unless you turn it on.',
