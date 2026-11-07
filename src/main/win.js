@@ -209,6 +209,7 @@ class Win {
     this.activeId = id;
     t.lastActive = Date.now();
     t.ensureAwake();
+    require('./extensions').selectTab(t);
     this.bw.contentView.addChildView(t.view);
     this.bw.contentView.addChildView(this.ui); // keep the glass UI on top
     this.layout();

@@ -1,7 +1,7 @@
 {
   "name": "lumen-browser",
   "productName": "Lumen",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Lumen: a Chromium-based browser with a Liquid Glass style toolbar.",
   "main": "src/main/main.js",
   "private": true,
@@ -90,6 +90,8 @@
     "url": "https://github.com/SlayThat/Lumen_Browser.git"
   },
   "dependencies": {
+    "electron-chrome-extensions": "^4.10.0",
+    "electron-chrome-web-store": "^0.13.0",
     "electron-updater": "^6.3.0"
   },
   "desktopName": "lumen-browser.desktop"

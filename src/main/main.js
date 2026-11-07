@@ -38,13 +38,15 @@ if (!app.requestSingleInstanceLock()) {
     } else new Win({ url });
   });
 
-  app.whenReady().then(() => {
+  app.whenReady().then(async () => {
     S.init();
     const firstRun = !S.settings.raw;
     Menu.setApplicationMenu(null);
     nativeTheme.themeSource = S.settings.data.theme;
     Win = require('./win').Win;
     require('./ipc').register();
+    // Experimental extensions start before the first window so their scripts reach every tab. Never wait long.
+    try { await Promise.race([require('./extensions').init(), new Promise(r => setTimeout(r, 10000))]); } catch (e) { console.error('[extensions]', e); }
 
     const saved = S.sessionStore.data.windows;
     const argvUrl = urlFromArgv(process.argv);

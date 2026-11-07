@@ -29,7 +29,8 @@ const SETTINGS = {
   restoreSession: isBool,
   adblock: isBool,
   httpsFirst: isBool,
-  bookmarksBar: isBool
+  bookmarksBar: isBool,
+  extensions: isBool
 };
 
 function winFrom(event) {
@@ -170,6 +171,10 @@ function register() {
     }
   });
   on('app:checkUpdate', (w) => require('./updater').check(true));
+
+  // ---- extensions (experimental) ----
+  handle('extensions:list', () => require('./extensions').list());
+  on('extensions:remove', async (w, id) => { const ok = await require('./extensions').remove(id); w.toast(ok ? 'Extension removed' : 'Could not remove the extension'); });
 
   // ---- settings ----
   handle('settings:get', () => S.view());

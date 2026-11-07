@@ -772,6 +772,19 @@
     t.addEventListener('click', () => { const v = t.getAttribute('aria-checked') !== 'true'; t.setAttribute('aria-checked', String(v)); L.send('settings:set', { key, value: v }); });
     return h('div', { class: 'srow' }, h('div', { class: 'sl' }, label, hint ? h('small', { text: hint }) : null), t);
   }
+  // Installed extensions, filled in after the page draws.
+  function extensionList() {
+    const box = h('div', { class: 'extlist' });
+    L.invoke('extensions:list').then((list) => {
+      if (!Array.isArray(list) || !list.length) { box.appendChild(h('div', { class: 'srow' }, h('div', { class: 'sl' }, 'No extensions installed', h('small', { text: 'If you just turned this on, restart Lumen first.' })))); return; }
+      list.forEach((x) => {
+        const row = h('div', { class: 'srow' }, h('div', { class: 'sl' }, x.name, h('small', { text: 'Version ' + x.version })),
+          actionButton('Remove', () => { L.send('extensions:remove', x.id); row.remove(); }));
+        box.appendChild(row);
+      });
+    });
+    return box;
+  }
   function slider(label, key, min, max, step, cur, fmt, local) {
     const out = h('span', { class: 'sv', text: fmt(cur) });
     const inp = h('input', { type: 'range', min, max, step, value: cur, 'aria-label': label });
@@ -842,6 +855,9 @@
       group('Privacy and security',
         toggle('Block ads and trackers', 'Blocks third-party ad and tracking networks. It cannot block ads a site serves itself, such as YouTube video ads.' + (s.adblockCount ? ' Blocked ' + s.adblockCount.toLocaleString() + ' requests since Lumen started.' : ''), s.adblock, 'adblock'),
         toggle('Use secure connections when possible', 'Opens http:// addresses over https first. If a site has no https, Lumen opens it over http and tells you.', s.httpsFirst, 'httpsFirst')),
+      group('Extensions (experimental)',
+        toggle('Allow extensions', 'Add extensions from the Chrome Web Store: open chromewebstore.google.com and choose Add. Restart Lumen after changing this. Extensions can read and change the pages you visit, so add only ones you trust. They do not run in private windows, and ad blockers that rely on web request filtering may not work next to Lumen’s own blocker.', s.extensions, 'extensions'),
+        s.extensions ? extensionList() : null),
       group('Browsing data',
         h('div', { class: 'srow' }, h('div', { class: 'sl', text: 'History' }), confirmButton('Clear history', 'history')),
         h('div', { class: 'srow' }, h('div', { class: 'sl', text: 'Cache' }), confirmButton('Clear cache', 'cache')),
