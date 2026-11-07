@@ -2,10 +2,10 @@
 // Minimal bridge for the glass UI. Only whitelisted channels pass; the main process validates again.
 const { contextBridge, ipcRenderer } = require('electron');
 
-const SEND = new Set(['tab:new', 'tab:close', 'tab:activate', 'tab:move', 'tab:duplicate', 'tab:closeOthers', 'tab:reload', 'tab:mute', 'tab:closeRight',
+const SEND = new Set(['tab:new', 'tab:close', 'tab:activate', 'tab:move', 'tab:duplicate', 'tab:closeOthers', 'tab:reload', 'tab:mute', 'tab:closeRight', 'extensions:remove',
   'cmd', 'navTo', 'nav:goto', 'find', 'find:stop', 'layout', 'window', 'focusPage', 'ctx:run', 'ctx:close', 'perm:answer',
   'bookmarks:remove', 'history:remove', 'history:clear', 'download:act', 'downloads:clear', 'settings:set', 'data:clear', 'clipboard:copy', 'app:defaultBrowser', 'app:checkUpdate', 'tab:pin', 'bookmark:bar', 'import:bookmarks']);
-const INVOKE = new Set(['nav:history', 'suggest', 'bookmarks:list', 'history:list', 'downloads:list', 'settings:get', 'bookmarks:bar', 'import:sources']);
+const INVOKE = new Set(['nav:history', 'suggest', 'bookmarks:list', 'history:list', 'downloads:list', 'settings:get', 'bookmarks:bar', 'import:sources', 'extensions:list']);
 const RECEIVE = new Set(['state', 'frame', 'cmd', 'find:result', 'settings', 'downloads', 'perm:ask', 'ctx:show', 'toast']);
 
 contextBridge.exposeInMainWorld('lumen', {

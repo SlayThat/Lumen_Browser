@@ -5,6 +5,13 @@
 //
 // feature: { chip, title, text, steps?: [..], art?: 'newtab' | 'whatsnew' | 'downloads' | 'menu' | 'rows', rows?: [[label, state], ..], color: 1-4 }
 const NOTES = [
+  { version: '0.7.0', features: [
+    { chip: 'Extensions (experimental)', title: 'Add extensions from the Chrome Web Store', color: 1, art: 'rows', rows: [['Dark mode for every site', 'Extension'], ['Password manager', 'Extension'], ['Translate a page', 'Extension']],
+      text: 'Lumen can now run Chrome extensions. It is experimental and off by default, so Lumen works exactly as before unless you turn it on.',
+      steps: ['Open Settings and turn on Allow extensions, then restart Lumen.', 'Visit chromewebstore.google.com and choose Add on an extension.', 'Remove extensions any time in Settings. They do not run in private windows.'] },
+    { chip: 'Your choice, always asked', title: 'Lumen asks before adding one', color: 2, art: 'rows', rows: [['Add “Extension name”?', 'Ask first'], ['Permissions it asks for', 'Shown'], ['Private windows', 'Never']],
+      text: 'Every extension shows the permissions it wants before it is added. Extensions can read and change the pages you visit, so add only ones you trust.' }
+  ] },
   { version: '0.6.0', features: [
     { chip: 'A calmer new tab', title: 'A new tab that gets out of your way', color: 1, art: 'newtab',
       text: 'The new tab page is simpler: a greeting, the date, a search line and the sites you visit most. It follows your light or dark theme.',

@@ -51,6 +51,7 @@ class Tab {
     S.wcToTab.set(view.webContents.id, this);
     if (this.muted) view.webContents.setAudioMuted(true);
     this.bind(view.webContents);
+    require('./extensions').addTab(this);
     this.load(this.url);
   }
 
