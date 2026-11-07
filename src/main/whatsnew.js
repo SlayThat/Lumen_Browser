@@ -2,6 +2,14 @@
 // "What's new" page shown once after Lumen updates. Add a new entry at the top of NOTES for every release.
 // Plain text only: it is escaped when the page is built.
 const NOTES = [
+  { version: '0.5.1', title: 'Security update', items: [
+    'Lumen no longer starts downloaded programs and scripts for you. Opening one from the downloads list shows it in its folder instead.',
+    'Download names are cleaned, so a site cannot choose a folder or a reserved name for the file.',
+    'Web pages can no longer jump to local files or data: pages. Local files can only link to other local files.',
+    'Pages cannot reach USB, serial, HID or Bluetooth devices.',
+    'The app itself is built with Electron’s Node and debugging switches turned off, so it cannot be hijacked through environment variables.',
+    'Fixed: the Mute tab and Close tabs to the right menu items from 0.4.0 did nothing. They work now.'
+  ] },
   { version: '0.5.0', title: 'A look at what changed', items: [
     'This page: after Lumen updates, it opens once to show what is new. You can open it again from Settings, under Updates.'
   ] },

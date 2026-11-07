@@ -8,6 +8,7 @@ const S = require('./state');
 const C = require('./config');
 const { Win } = require('./win');
 const { classify } = require('./omnibox');
+const safety = require('./safety');
 
 const isStr = (v, max = 4096) => typeof v === 'string' && v.length <= max;
 const isInt = (v) => Number.isInteger(v);
@@ -145,7 +146,11 @@ function register() {
     if (!o || !isInt(o.id)) return;
     const d = S.downloads.find(x => x.id === o.id);
     if (!d) return;
-    if (o.action === 'open' && d.state === 'completed') shell.openPath(d.path).then(err => { if (err) w.toast('Could not open the file'); });
+    if (o.action === 'open' && d.state === 'completed') {
+      // Programs and scripts are never started from here: show them in their folder instead.
+      if (safety.isRiskyFile(d.name)) { shell.showItemInFolder(d.path); w.toast('Lumen does not run programs for you. It is in your Downloads folder.'); }
+      else shell.openPath(d.path).then(err => { if (err) w.toast('Could not open the file'); });
+    }
     else if (o.action === 'show') shell.showItemInFolder(d.path);
     else if (o.action === 'cancel' && d.item) d.item.cancel();
     else if (o.action === 'remove') { S.downloads = S.downloads.filter(x => x !== d); S.broadcast('downloads', S.downloadSnapshot()); }
