@@ -21,9 +21,17 @@ assert.strictEqual(w.shouldShow({ lastSeen: '0.1.0', current: '0.0.1', firstRun:
 assert.ok(w.NOTES.some(n => n.version === pkg.version), 'add a NOTES entry for ' + pkg.version + ' in src/main/whatsnew.js');
 assert.strictEqual(w.NOTES[0].version, pkg.version, 'the newest NOTES entry should be the version in package.json');
 
-const html = w.render(cur, { BASE_CSS: '', nonce: () => 'n', csp: () => "default-src 'none'", LOGO: '' });
-assert.ok(html.includes('What’s new in Lumen') && html.includes('Earlier'));
-w.NOTES.unshift({ version: '9.0.0', title: '<script>x</script>', items: ['a & "b"'] });
-const bad = w.render('9.0.0', { BASE_CSS: '', nonce: () => 'n', csp: () => '', LOGO: '' });
-assert.ok(!bad.includes('<script>x') && bad.includes('&lt;script&gt;') && bad.includes('a &amp; &quot;b&quot;'));
+const pages = { BASE_CSS: '', nonce: () => 'n', csp: () => "default-src 'none'", LOGO: '' };
+const html = w.render(cur, pages);
+assert.ok(html.includes('What’s new') && html.includes('class="chip'));
+// every feature of every release is complete, and older notes keep a plain list
+for (const n of w.NOTES) {
+  assert.ok(n.features ? n.features.length >= 1 : (n.title && n.items && n.items.length), n.version + ' needs features or items');
+  for (const f of n.features || []) { assert.ok(f.chip && f.title && f.text, n.version + ' feature is missing text'); assert.ok([1, 2, 3, 4].includes(f.color), n.version + ' feature needs color 1-4'); }
+}
+// text is escaped everywhere
+w.NOTES.unshift({ version: '9.0.0', features: [{ chip: '<b>x</b>', title: '<script>x</script>', text: 'a & "b"', steps: ['<img src=x>'], color: 1, art: 'rows', rows: [['<i>', '"q"']] }] });
+const bad = w.render('9.0.0', pages);
+assert.ok(!bad.includes('<script>x') && !bad.includes('<img src=x>') && !bad.includes('<b>x</b>') && bad.includes('&lt;script&gt;') && bad.includes('a &amp; &quot;b&quot;'));
+w.NOTES.shift();
 console.log('whatsnew tests passed');
