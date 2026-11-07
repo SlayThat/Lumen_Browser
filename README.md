@@ -2,7 +2,7 @@
 
 A fast, simple web browser for Windows 10 and 11 and for Linux with a **Liquid Glass** toolbar: the tabs and address bar are see-through glass that bends and blurs the page behind them.
 
-Lumen is built on Chromium (through Electron), so websites work the way they do in Chrome or Edge. It is free and open source (MIT licence).
+Lumen is built on Chromium (through Electron), so websites work the way they do in Chrome or Edge. It is free and open source (GPL-3.0 licence).
 
 > **Note:** This build is currently unsigned. If Windows SmartScreen blocks the app, click **More info** and then **Run anyway**.
 
@@ -89,4 +89,4 @@ How it works inside, and notes for contributors, are in [docs/DEVELOPMENT.md](do
 
 ## Licence
 
-MIT. See [LICENSE](LICENSE). Lumen includes Electron and Chromium, which have their own open-source licences.
+GPL-3.0. See [LICENSE](LICENSE). Versions released up to 0.6.0 were published under the MIT licence and stay available under it. Lumen includes Electron and Chromium, which have their own open-source licences.
