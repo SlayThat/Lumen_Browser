@@ -26,41 +26,59 @@ html,body{margin:0;min-height:100%}
 body{background:var(--bg);color:var(--fg);font:15px/1.5 "Segoe UI Variable Text","Segoe UI",system-ui,"Ubuntu","Cantarell","Noto Sans",sans-serif}
 `;
 
+// "youtube.com" -> "Youtube", "bbc.co.uk" -> "Bbc": a short, steady name for a site.
+function siteName(host) {
+  const parts = host.split('.');
+  let i = parts.length - 2;
+  if (i > 0 && parts[i].length <= 3 && parts[parts.length - 1].length === 2) i--;
+  const w = parts[Math.max(i, 0)] || host;
+  return w.charAt(0).toUpperCase() + w.slice(1);
+}
+
 function renderNewTab({ engineUrl, engineName, sites }) {
   const n = nonce();
-  const tiles = sites.map(s => {
+  const rows = sites.slice(0, 8).map(s => {
     let host = s.origin; try { host = new URL(s.origin).hostname.replace(/^www\./, ''); } catch (e) {}
-    const letter = (host[0] || '?').toUpperCase();
-    return `<a class="tile" href="${esc(s.origin)}"><span class="ic" style="--h:${hue(host)}">${esc(letter)}</span><span class="nm">${esc(s.title || host)}</span><span class="ho">${esc(host)}</span></a>`;
+    return `<li><a href="${esc(s.origin)}" style="--h:${hue(host)}"><i></i><b>${esc(siteName(host))}</b><em>${esc(host)}</em></a></li>`;
   }).join('');
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>New Tab</title>
 <meta http-equiv="Content-Security-Policy" content="${csp(n)}">
 <style>${BASE_CSS}
-body{background:
- radial-gradient(60vmax 40vmax at 12% -6%,var(--b1),transparent 60%),
- radial-gradient(55vmax 38vmax at 92% 4%,var(--b2),transparent 58%),
- radial-gradient(70vmax 50vmax at 50% 110%,var(--b3),transparent 60%),var(--bg);background-attachment:fixed}
-main{max-width:760px;margin:0 auto;padding:clamp(40px,12vh,120px) 24px 64px}
-h1{display:flex;align-items:center;gap:12px;font-weight:600;font-size:13px;line-height:1;letter-spacing:.14em;text-transform:uppercase;color:var(--fg2);margin:0 0 22px}
-h1 img{width:44px;height:44px;border-radius:11px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
-form{display:flex}
-input{flex:1;font:inherit;font-size:18px;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:15px 24px;outline:none;backdrop-filter:blur(10px)}
-input:focus-visible{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent)}
-input::placeholder{color:var(--fg2)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:12px;margin-top:44px}
-.tile{display:flex;flex-direction:column;gap:2px;padding:14px;border-radius:18px;background:var(--card);border:1px solid var(--line);text-decoration:none;color:inherit;min-width:0}
-.tile:hover{border-color:var(--accent)}.tile:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.ic{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-weight:700;color:#fff;background:hsl(var(--h) 55% 46%);margin-bottom:8px}
-.nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ho{font-size:12.5px;color:var(--fg2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.empty{margin-top:44px;color:var(--fg2)}
+:root{--bg:#f3efe7;--fg:#201d18;--mut:#8a8372;--line:#ddd6c7;--rule:#201d18;--acc:#0a62d6;--hov:rgba(10,98,214,.07);--glow:rgba(10,98,214,.07);--ser:"Iowan Old Style","Palatino Linotype","Source Serif 4","Noto Serif","Liberation Serif",Georgia,serif}
+@media (prefers-color-scheme:dark){:root{--bg:#14171c;--fg:#ece8df;--mut:#8b8f96;--line:#2c3138;--rule:#ece8df;--acc:#6cb2ff;--hov:rgba(255,255,255,.06);--glow:rgba(108,178,255,.10)}}
+body{background:radial-gradient(60vmax 28vmax at 50% -12%,var(--glow),transparent 70%),var(--bg);color:var(--fg);background-attachment:fixed}
+main{max-width:680px;margin:0 auto;padding:clamp(48px,17vh,170px) 28px 64px}
+.t{display:flex;align-items:center;gap:10px;font:400 14px/1 ui-monospace,"Cascadia Mono",Consolas,monospace;color:var(--mut);letter-spacing:.04em}
+.t b{width:9px;height:9px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 4px var(--glow)}
+h1{font:400 clamp(38px,7vw,54px)/1.05 var(--ser);margin:16px 0 40px;letter-spacing:-.015em}
+form{display:flex;align-items:baseline;gap:12px;border-bottom:1.5px solid var(--rule);padding-bottom:10px;transition:border-color .15s}
+form:focus-within{border-color:var(--acc)}
+form span{font:13px ui-monospace,Consolas,monospace;color:var(--mut)}
+input{flex:1;min-width:0;font:inherit;font-size:19px;color:var(--fg);background:none;border:0;outline:0;caret-color:var(--acc)}
+input::placeholder{color:var(--mut)}
+ul{list-style:none;margin:44px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:0 40px}
+@media (max-width:560px){ul{grid-template-columns:1fr}}
+li a{display:flex;gap:12px;align-items:center;padding:11px 8px;margin:0 -8px;border-bottom:1px solid var(--line);text-decoration:none;color:inherit;min-width:0}
+li a:hover{background:var(--hov)}li a:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+li i{width:10px;height:10px;border-radius:50%;background:hsl(var(--h) 45% 52%);flex:none}
+li b{font-weight:600;white-space:nowrap}
+li em{margin-left:auto;font:12px ui-monospace,Consolas,monospace;color:var(--mut);font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.empty{margin-top:44px;color:var(--mut)}
 </style></head><body><main>
-<h1>${LOGO ? `<img src="${LOGO}" alt="" width="44" height="44">` : ''}${esc(APP_NAME)}</h1>
-<form id="f"><input id="q" type="text" placeholder="Search ${esc(engineName)} or type an address" autocomplete="off" spellcheck="false" autofocus aria-label="Search or enter address"></form>
-${sites.length ? `<nav class="grid" aria-label="Frequently visited">${tiles}</nav>` : `<p class="empty">Sites you visit often will appear here.</p>`}
+<div class="t"><b></b><span id="d"></span></div>
+<h1 id="g">Hello.</h1>
+<form id="f"><span aria-hidden="true">⌕</span><input id="q" type="text" placeholder="Search ${esc(engineName)} or type an address" autocomplete="off" spellcheck="false" autofocus aria-label="Search or enter address"></form>
+${rows ? `<ul aria-label="Frequently visited">${rows}</ul>` : `<p class="empty">Sites you visit often will appear here.</p>`}
 </main>
 <script nonce="${n}">
 var ENGINE=${JSON.stringify(engineUrl)};
+(function(){
+ var now=new Date(),h=now.getHours();
+ document.getElementById('g').textContent=h<5?'Good night.':h<12?'Good morning.':h<18?'Good afternoon.':'Good evening.';
+ function tick(){var t=new Date();
+  document.getElementById('d').textContent=(t.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'})+' · '+t.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})).toUpperCase()}
+ tick();setInterval(tick,20000);
+})();
 document.getElementById('f').addEventListener('submit',function(e){
  e.preventDefault();var s=document.getElementById('q').value.trim();if(!s)return;
  var url;
