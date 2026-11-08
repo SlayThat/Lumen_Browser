@@ -5,6 +5,10 @@
 //
 // feature: { chip, title, text, steps?: [..], art?: 'newtab' | 'whatsnew' | 'downloads' | 'menu' | 'rows', rows?: [[label, state], ..], color: 1-4 }
 const NOTES = [
+  { version: '0.8.2', features: [
+    { chip: 'Shortcut fix', title: 'Ctrl+Alt+R works on every keyboard', color: 1, art: 'rows', rows: [['English keyboard', 'Works'], ['Cyrillic and other layouts', 'Works now'], ['F9', 'Always works']],
+      text: 'Ctrl+Alt+R for Reader view did not work on some keyboard layouts. It now uses the physical R key, so it works on any layout.' }
+  ] },
   { version: '0.8.1', features: [
     { chip: 'Reader view shortcut', title: 'Ctrl+Alt+R opens Reader view', color: 1, art: 'rows', rows: [['F9', 'Reader view'], ['Ctrl+Alt+R', 'Reader view']],
       text: 'Reader view now also opens with Ctrl+Alt+R. F9 still works. Press either one again to go back to the page.' }
