@@ -306,7 +306,8 @@ class Win {
     const alt = input.alt;
     const k = String(input.key || '').toLowerCase();
     const run = (n, a) => { this.command(n, a); return true; };
-    if (ctrl && alt && !shift && k === 'r') return run('reader');
+    // Match the physical R key, so it works on any keyboard layout (Cyrillic, AltGr layouts and so on).
+    if (ctrl && alt && !shift && (input.code === 'KeyR' || k === 'r')) return run('reader');
     if (ctrl && !alt) {
       switch (k) {
         case 't': return shift ? run('reopenTab') : run('newTab');
