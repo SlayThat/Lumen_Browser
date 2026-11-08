@@ -118,7 +118,6 @@ function setupDownloads(ses) {
     });
     item.once('done', (e, state) => {
       rec.state = state; rec.received = item.getReceivedBytes(); rec.item = null; push();
-      if (state === 'completed') S.broadcast('toast', { text: `Downloaded ${rec.name}` });
     });
     push();
   });

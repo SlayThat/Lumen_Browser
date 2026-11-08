@@ -147,7 +147,7 @@
       if (modal) mode = 'full';
       else {
         let bottom = STRIP;
-        for (const id of ['findbar', 'suggest', 'perm', 'perf', 'toast']) {
+        for (const id of ['findbar', 'suggest', 'perm', 'perf', 'toast', 'dlpop']) {
           const e = $(id);
           if (!e.hidden) bottom = Math.max(bottom, e.offsetTop + e.offsetHeight + 18);
         }
@@ -572,7 +572,7 @@
       { label: 'Settings', key: 'Ctrl+,', run: () => openSheet('settings') }
     ];
   }
-  function closeMenus() { ['menu', 'ctx', 'navmenu'].forEach(id => hidePop($(id))); }
+  function closeMenus() { ['menu', 'ctx', 'navmenu', 'dlpop'].forEach(id => hidePop($(id))); }
   function openMenu(el, items, x, y, alignRight) {
     closeMenus();
     el.textContent = '';
@@ -754,6 +754,117 @@
       body.append(h('div', { class: 'row' }, h('span', { class: 'ricon', html: window.icon('down', 14) }), info, h('div', { class: 'rbtns' }, btns)));
     }
   }
+
+  // ---------- download button ----------
+  // Shows a ring that fills while a file downloads, a check when it is done, and a small panel
+  // with the latest files. The panel opens by itself when a download starts.
+  const dlbtn = $('dlbtn'), dlpop = $('dlpop'), dlprg = dlbtn.querySelector('.prg'), dldot = dlbtn.querySelector('.dldot');
+  let dlKnown = null, dlUnread = 0, dlAuto = false, dlAutoT = 0;
+  const calm = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  setIcon(dlbtn.querySelector('.dlic'), 'down', 18);
+  setIcon(dlbtn.querySelector('.dlck'), 'check', 18);
+
+  function dlBounce() {
+    dlbtn.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.24)' }, { transform: 'scale(.93)' }, { transform: 'scale(1)' }], { duration: 440, easing: 'ease-out' });
+    const rip = h('span', { class: 'dlrip' });
+    dlbtn.append(rip);
+    rip.animate([{ transform: 'scale(.7)', opacity: .65 }, { transform: 'scale(1.7)', opacity: 0 }], { duration: 700, easing: 'ease-out' }).onfinish = () => rip.remove();
+  }
+  function dlDrop() {
+    const r = dlbtn.getBoundingClientRect();
+    const g = h('span', { class: 'dlghost', html: window.icon('down', 18) });
+    g.style.left = (r.left + r.width / 2 - 9) + 'px';
+    g.style.top = (r.top + r.height / 2 - 9) + 'px';
+    document.body.append(g);
+    g.animate([
+      { transform: 'translateY(-34px) scale(1.8)', opacity: 0 },
+      { transform: 'translateY(-12px) scale(1.3)', opacity: 1, offset: .45 },
+      { transform: 'translateY(0) scale(1)', opacity: 1 }
+    ], { duration: 520, easing: 'cubic-bezier(.3,.1,.2,1)' }).onfinish = () => { g.remove(); dlBounce(); };
+  }
+  function dlAppear() {
+    dlbtn.animate([{ transform: 'scale(.2)', opacity: 0 }, { transform: 'scale(1.2)', opacity: 1, offset: .6 }, { transform: 'none', opacity: 1 }], { duration: 480, easing: 'ease-out' });
+  }
+
+  function onDownloads(list) {
+    const first = dlKnown === null;
+    if (first) dlKnown = new Map();
+    let started = null, finished = 0;
+    for (const d of list) {
+      const was = dlKnown.get(d.id);
+      if (was === undefined && !first && !started) started = d;
+      if ((was === 'progressing' || (was === undefined && !first)) && d.state === 'completed') finished++;
+      dlKnown.set(d.id, d.state);
+    }
+    const wasHidden = dlbtn.hidden;
+    dlbtn.hidden = list.length === 0;
+    if (!list.length) dlUnread = 0;
+    dlUnread += finished;
+    if (!dlpop.hidden) dlUnread = 0;
+    const active = list.filter(d => d.state === 'progressing');
+    const known = active.length > 0 && active.every(d => d.total > 0);
+    const total = active.reduce((a, d) => a + d.total, 0), got = active.reduce((a, d) => a + d.received, 0);
+    const pct = known && total > 0 ? Math.min(100, Math.round(got / total * 100)) : 0;
+    dlbtn.dataset.state = active.length ? 'active' : (dlUnread ? 'done' : 'idle');
+    dlbtn.classList.toggle('spin', active.length > 0 && !known);
+    dlprg.style.strokeDashoffset = String(100 - pct);
+    dldot.hidden = !dlUnread;
+    const label = active.length ? 'Downloading ' + (active.length > 1 ? active.length + ' files' : active[0].name) + (known ? ', ' + pct + '%' : '') : 'Downloads (Ctrl+J)';
+    dlbtn.title = label; dlbtn.setAttribute('aria-label', label);
+    if (!dlbtn.hidden && !calm()) {
+      if (wasHidden) dlAppear();
+      if (started) dlDrop();
+      else if (finished) dlBounce();
+    }
+    if (started) openDlPop(true);
+    renderDlPop();
+  }
+
+  function renderDlPop() {
+    if (dlpop.hidden) return;
+    const box = $('dllist'); box.textContent = '';
+    for (const d of downloads.slice(0, 4)) {
+      const ext = (d.name.includes('.') ? d.name.split('.').pop() : 'file').slice(0, 4).toUpperCase();
+      const tile = h('span', { class: 'ricon', text: ext });
+      tile.style.background = 'hsl(' + hue(ext) + ' 50% 42%)';
+      const state = d.state === 'completed' ? (fmtBytes(d.total || d.received) || 'Done') + ' · Done'
+        : d.state === 'cancelled' ? 'Cancelled' : d.state === 'interrupted' ? 'Failed'
+          : d.state === 'paused' ? 'Paused' : (fmtBytes(d.received) + (d.total ? ' of ' + fmtBytes(d.total) : ''));
+      const main = h('div', { class: 'dlmain' }, h('span', { class: 'rt', text: d.name }), h('span', { class: 'ru', text: state }));
+      if (d.state === 'progressing') {
+        const fill = document.createElement('i');
+        fill.style.width = (d.total > 0 ? Math.min(100, Math.round(d.received / d.total * 100)) : 0) + '%';
+        main.append(h('div', { class: 'bar' }, fill));
+      }
+      const btns = [];
+      if (d.state === 'completed') btns.push(iconBtn('external', 'Open file', () => L.send('download:act', { id: d.id, action: 'open' })));
+      btns.push(iconBtn('folder', 'Show in folder', () => L.send('download:act', { id: d.id, action: 'show' })));
+      if (d.state === 'progressing') btns.push(iconBtn('close', 'Cancel download', () => L.send('download:act', { id: d.id, action: 'cancel' })));
+      box.append(h('div', { class: 'dli' }, tile, main, h('div', { class: 'rbtns' }, btns)));
+    }
+  }
+  function openDlPop(auto) {
+    if (dlbtn.hidden) return;
+    closeMenus();
+    clearTimeout(dlAutoT);
+    dlAuto = !!auto;
+    dlUnread = 0; dldot.hidden = true;
+    if (dlbtn.dataset.state === 'done') dlbtn.dataset.state = 'idle';
+    dlpop.hidden = false;
+    renderDlPop();
+    const r = dlbtn.getBoundingClientRect(), w = dlpop.offsetWidth;
+    const W = (S.size || [window.innerWidth])[0];
+    const left = Math.max(8, Math.min(r.right - w, W - w - 8));
+    dlpop.style.left = left + 'px'; dlpop.style.top = (r.bottom + 8) + 'px';
+    dlpop.style.setProperty('--ox', (r.left + r.width / 2 - left) + 'px');
+    showPop(dlpop);
+    if (auto) dlAutoT = setTimeout(() => { if (dlAuto && !dlpop.matches(':hover') && !dlpop.contains(document.activeElement)) hidePop(dlpop); }, 5200);
+  }
+  dlbtn.addEventListener('click', () => { if (!dlpop.hidden && dlpop.classList.contains('in')) hidePop(dlpop); else openDlPop(false); });
+  dlpop.addEventListener('pointerenter', () => { dlAuto = false; clearTimeout(dlAutoT); });
+  $('dlall').addEventListener('click', () => { hidePop(dlpop); openSheet('downloads'); });
+  document.addEventListener('pointerdown', (e) => { if (!dlpop.hidden && !dlpop.contains(e.target) && !e.target.closest('#dlbtn')) hidePop(dlpop); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !dlpop.hidden) hidePop(dlpop); });
 
   function seg(key, options, cur, onChange) {
     const box = h('div', { class: 'seg', role: 'group' });
@@ -937,7 +1048,7 @@
   });
   L.on('frame', (f) => { G.setFrame(f); applyGlassParams(); poke(); });
   L.on('settings', (s) => { settings = s; applySettings(); if (sheetKind === 'settings' && !sheet.contains(document.activeElement)) renderSettings(); });
-  L.on('downloads', (d) => { downloads = d; renderDownloads(); });
+  L.on('downloads', (d) => { downloads = d; renderDownloads(); onDownloads(d); });
   L.on('toast', (t) => toast(t.text));
   L.on('find:result', (r) => {
     const text = $('findinput').value;

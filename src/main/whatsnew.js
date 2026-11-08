@@ -5,6 +5,11 @@
 //
 // feature: { chip, title, text, steps?: [..], art?: 'newtab' | 'whatsnew' | 'downloads' | 'menu' | 'rows', rows?: [[label, state], ..], color: 1-4 }
 const NOTES = [
+  { version: '0.9.0', features: [
+    { chip: 'Downloads', title: 'See your downloads as they happen', color: 1, art: 'downloads',
+      text: 'A download button now appears in the toolbar. A ring fills while a file downloads, a check shows when it is done, and a small panel opens by itself so you can see what is coming in. No more guessing whether a download started.',
+      steps: ['Download a file as usual.', 'Watch the button next to the star. The panel opens for a few seconds.', 'Click the button any time to open a file, show it in its folder, or cancel it. Ctrl+J still opens the full list.'] }
+  ] },
   { version: '0.8.2', features: [
     { chip: 'Shortcut fix', title: 'Ctrl+Alt+R works on every keyboard', color: 1, art: 'rows', rows: [['English keyboard', 'Works'], ['Cyrillic and other layouts', 'Works now'], ['F9', 'Always works']],
       text: 'Ctrl+Alt+R for Reader view did not work on some keyboard layouts. It now uses the physical R key, so it works on any layout.' }
