@@ -565,7 +565,7 @@
       { sep: true },
       { label: 'Find in page', key: 'Ctrl+F', run: () => openFind() },
       { zoom: true },
-      { label: 'Reader view', key: 'F9', run: () => L.send('cmd', 'reader') },
+      { label: 'Reader view', key: 'Ctrl+Alt+R', run: () => L.send('cmd', 'reader') },
       { label: 'Print…', key: 'Ctrl+P', run: () => L.send('cmd', 'print') },
       { label: 'Developer tools', key: 'F12', run: () => L.send('cmd', 'devtools') },
       { sep: true },
