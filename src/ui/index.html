@@ -36,6 +36,10 @@
         <div id="loadbar" hidden></div>
       </div>
       <button id="star" class="ib" type="button" aria-label="Bookmark this page" title="Bookmark (Ctrl+D)"></button>
+      <button id="dlbtn" class="ib" type="button" hidden aria-label="Downloads" aria-haspopup="dialog" title="Downloads (Ctrl+J)">
+        <svg class="dlring" viewBox="0 0 32 32" aria-hidden="true"><circle class="trk" cx="16" cy="16" r="13.5"/><circle class="prg" cx="16" cy="16" r="13.5" pathLength="100"/></svg>
+        <span class="dlic" aria-hidden="true"></span><span class="dlck" aria-hidden="true"></span><span class="dldot" hidden></span>
+      </button>
       <button id="menubtn" class="ib" type="button" aria-label="Menu" aria-haspopup="menu" title="Menu"></button>
     </div>
   </div>
@@ -69,6 +73,11 @@
   <span>Glass is running slowly on this PC.</span>
   <button id="perfswitch" class="btn primary sm" type="button">Use Frosted</button>
   <button id="perfdismiss" class="btn sm" type="button">Dismiss</button>
+</div>
+
+<div id="dlpop" class="pop" data-glass="0.9" hidden role="dialog" aria-label="Downloads">
+  <div id="dlhead"><span>Downloads</span><button id="dlall" class="btn sm" type="button">Show all</button></div>
+  <div id="dllist"></div>
 </div>
 
 <div id="toast" class="pop" data-glass="0.5" hidden role="status" aria-live="polite"></div>

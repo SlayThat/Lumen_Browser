@@ -44,7 +44,7 @@ Some antivirus and sandbox services flag new, unsigned installers like this one 
 - Opens http:// addresses over https when the site supports it.
 - One box for addresses and searches (DuckDuckGo by default, Google and Bing available).
 - Reader view: a clean, distraction-free page for articles (F9). Mute tabs, picture in picture for videos, and a What's new page after each update.
-- Find in page, per-site zoom, bookmarks, history and downloads.
+- Find in page, per-site zoom, bookmarks, history, and a download button with a live progress ring.
 - Privacy first: sites must ask before using your camera, microphone or location, and bad certificates are never accepted silently.
 
 ## What is not here yet
