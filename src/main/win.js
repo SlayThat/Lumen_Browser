@@ -292,6 +292,7 @@ class Win {
       case 'fullscreen': this.bw.setFullScreen(!this.bw.isFullScreen()); break;
       case 'devtools': if (a && a.wc) a.wc.toggleDevTools(); break;
       case 'print': if (a && a.wc) a.wc.print(); break;
+      case 'reader': if (a) a.toggleReader(); break;
       case 'newWindow': new Win({}); break;
       case 'newPrivateWindow': new Win({ isPrivate: true }); break;
       default: break;
@@ -339,6 +340,7 @@ class Win {
     if (k === 'f6') return run('focusAddress');
     if (k === 'f11') return run('fullscreen');
     if (k === 'f12') return run('devtools');
+    if (k === 'f9') return run('reader');
     return false;
   }
 

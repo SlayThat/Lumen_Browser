@@ -72,7 +72,7 @@ function register() {
   });
   on('tab:reload', (w, id) => { const t = isInt(id) && w.findTab(id); if (t) { t.ensureAwake(); t.reload(false); } });
   on('cmd', (w, name, arg) => {
-    const allowed = ['newTab', 'closeTab', 'reopenTab', 'reload', 'stop', 'back', 'forward', 'home', 'zoom', 'fullscreen', 'devtools', 'print', 'newWindow', 'newPrivateWindow', 'bookmark'];
+    const allowed = ['newTab', 'closeTab', 'reopenTab', 'reload', 'stop', 'back', 'forward', 'home', 'zoom', 'fullscreen', 'devtools', 'print', 'newWindow', 'newPrivateWindow', 'bookmark', 'reader'];
     if (isStr(name, 32) && allowed.includes(name)) w.command(name, arg === 'in' || arg === 'out' || arg === 'reset' ? arg : (isBool(arg) ? arg : undefined));
   });
 
