@@ -47,6 +47,7 @@ function build(tab, p) {
     add('forward', 'Forward', !!h && h.canGoForward());
     add('reload', 'Reload');
     sep();
+    add('reader', /^lumen:\/\/reader/.test(tab.url) ? 'Close reader view' : 'Reader view');
     add('print', 'Print…');
     add('viewSource', 'View page source');
   }
@@ -77,6 +78,7 @@ function run(win, tab, p, id) {
     case 'back': tab.back(); break;
     case 'forward': tab.forward(); break;
     case 'reload': tab.reload(false); break;
+    case 'reader': tab.toggleReader(); break;
     case 'print': wc.print(); break;
     case 'viewSource': win.newTab('view-source:' + wc.getURL(), { opener: tab }); break;
     case 'inspect': wc.inspectElement(p.x, p.y); break;

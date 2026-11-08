@@ -5,6 +5,13 @@
 //
 // feature: { chip, title, text, steps?: [..], art?: 'newtab' | 'whatsnew' | 'downloads' | 'menu' | 'rows', rows?: [[label, state], ..], color: 1-4 }
 const NOTES = [
+  { version: '0.8.0', features: [
+    { chip: 'Reader view', title: 'Read articles without the clutter', color: 1, art: 'rows', rows: [['Ads and pop-ups', 'Gone'], ['Text size', 'Your choice'], ['Light and dark', 'Follows Lumen']],
+      text: 'Reader view shows just the article: the title, the text and the pictures, in a calm page that follows your light or dark theme. It works on pages with a real article, such as news stories and blog posts.',
+      steps: ['Open an article.', 'Press F9, or choose Reader view in the menu or when you right-click the page.', 'Use A− and A+ at the top to change the text size. Press F9 again to go back.'] },
+    { chip: 'Stays private', title: 'Nothing from the page runs', color: 2, art: 'rows', rows: [['Scripts from the site', 'Not copied'], ['Forms and frames', 'Not copied'], ['Reader pages', 'Not saved']],
+      text: 'Lumen copies only text and pictures out of the page. The site’s own scripts never run in reader view, and reader pages are not saved to your history.' }
+  ] },
   { version: '0.7.1', features: [
     { chip: 'A new icon', title: 'A new Lumen icon', color: 1, art: 'rows', rows: [['Taskbar and desktop', 'New icon'], ['Installer', 'New icon'], ['New tab and What’s new pages', 'New icon']],
       text: 'Lumen has a new icon: two overlapping sheets of glass, one blue and one amber. It is simpler, reads clearly at small sizes and matches the new look of the browser.' }

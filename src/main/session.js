@@ -45,6 +45,11 @@ function lumenHandler(isUi) {
         const eng = C.ENGINES[set.searchEngine] || C.ENGINES.duckduckgo;
         return htmlResponse(pages.renderNewTab({ engineUrl: eng.url, engineName: eng.name, sites: S.topSites(8) }));
       }
+      case 'reader': {
+        const doc = require('./reader').get(u.searchParams.get('id'));
+        if (!doc) return htmlResponse(pages.renderError({ desc: 'READER_EXPIRED', url: '', code: '', token: '' }));
+        return htmlResponse(pages.renderReaderDoc(doc));
+      }
       case 'whatsnew':
         return htmlResponse(pages.renderWhatsNew(require('electron').app.getVersion()));
       case 'error': {

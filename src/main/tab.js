@@ -5,6 +5,7 @@ const C = require('./config');
 const { classify, hostOf } = require('./omnibox');
 const nf = require('./netfilter');
 const safety = require('./safety');
+const reader = require('./reader');
 
 let nextTabId = 1;
 const GESTURE_MS = 1500;
@@ -24,6 +25,7 @@ class Tab {
     this.sleeping = false;
     this.lastActive = Date.now();
     this.errorFor = '';
+    this.readerFor = '';
     this.pinned = !!opts.pinned;
     this.upgrade = null;
     this.cssKey = null;
@@ -210,6 +212,24 @@ class Tab {
       if (r === 'none') this.win.toast('No video found on this page');
       else if (r === 'unsupported' || r === 'failed') this.win.toast('This video cannot open in a small window');
     }).catch(() => this.win.toast('This video cannot open in a small window'));
+  }
+  // Reader view: show the article from this page as clean text, or go back to the page it came from.
+  toggleReader() {
+    const wc = this.wc;
+    if (!wc) return;
+    if (this.url.startsWith('lumen://reader')) {
+      if (this.readerFor) this.load(this.readerFor);
+      return;
+    }
+    const from = this.url;
+    if (!/^https?:\/\//i.test(from)) { this.win.toast('Reader view works on web articles'); return; }
+    wc.executeJavaScript(reader.EXTRACT, true).then(raw => {
+      if (this.url !== from || !this.wc) return;
+      const doc = reader.sanitize(raw, from);
+      if (!doc) { this.win.toast('Reader view could not find an article on this page'); return; }
+      this.readerFor = from;
+      this.load('lumen://reader?id=' + reader.put(doc));
+    }).catch(() => this.win.toast('Reader view could not read this page'));
   }
   back() { const wc = this.wc; if (wc && wc.navigationHistory.canGoBack()) wc.navigationHistory.goBack(); }
   forward() { const wc = this.wc; if (wc && wc.navigationHistory.canGoForward()) wc.navigationHistory.goForward(); }

@@ -102,6 +102,7 @@ const ERRORS = {
   ERR_ADDRESS_UNREACHABLE: ["Can't reach this address", 'The address cannot be reached from this network.'],
   ERR_TOO_MANY_REDIRECTS: ['Too many redirects', 'This page keeps redirecting. Clearing cookies for the site may help.'],
   ERR_BLOCKED_BY_CLIENT: ['The page was blocked', 'This address is blocked.'],
+  READER_EXPIRED: ['This reader page has expired', 'Reader pages are not saved. Open the original article and press F9 again.'],
   PAGE_CRASHED: ['This page crashed', 'The page stopped working. Reloading may fix it.']
 };
 
@@ -147,4 +148,8 @@ function renderWhatsNew(version) {
   return require('./whatsnew').render(version, { BASE_CSS, nonce, csp, LOGO });
 }
 
-module.exports = { renderNewTab, renderError, renderProceed, renderWhatsNew };
+function renderReaderDoc(doc) {
+  return require('./reader').render(doc, { BASE_CSS, nonce, LOGO });
+}
+
+module.exports = { renderNewTab, renderError, renderProceed, renderWhatsNew, renderReaderDoc };
