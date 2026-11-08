@@ -306,6 +306,7 @@ class Win {
     const alt = input.alt;
     const k = String(input.key || '').toLowerCase();
     const run = (n, a) => { this.command(n, a); return true; };
+    if (ctrl && alt && !shift && k === 'r') return run('reader');
     if (ctrl && !alt) {
       switch (k) {
         case 't': return shift ? run('reopenTab') : run('newTab');

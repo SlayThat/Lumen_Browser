@@ -5,6 +5,10 @@
 //
 // feature: { chip, title, text, steps?: [..], art?: 'newtab' | 'whatsnew' | 'downloads' | 'menu' | 'rows', rows?: [[label, state], ..], color: 1-4 }
 const NOTES = [
+  { version: '0.8.1', features: [
+    { chip: 'Reader view shortcut', title: 'Ctrl+Alt+R opens Reader view', color: 1, art: 'rows', rows: [['F9', 'Reader view'], ['Ctrl+Alt+R', 'Reader view']],
+      text: 'Reader view now also opens with Ctrl+Alt+R. F9 still works. Press either one again to go back to the page.' }
+  ] },
   { version: '0.8.0', features: [
     { chip: 'Reader view', title: 'Read articles without the clutter', color: 1, art: 'rows', rows: [['Ads and pop-ups', 'Gone'], ['Text size', 'Your choice'], ['Light and dark', 'Follows Lumen']],
       text: 'Reader view shows just the article: the title, the text and the pictures, in a calm page that follows your light or dark theme. It works on pages with a real article, such as news stories and blog posts.',
