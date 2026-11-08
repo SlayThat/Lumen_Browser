@@ -6,6 +6,8 @@ Lumen is built on Chromium (through Electron), so websites work the way they do 
 
 > **Note:** This build is currently unsigned. If Windows SmartScreen blocks the app, click **More info** and then **Run anyway**.
 
+If you like Lumen, a ⭐ **star on GitHub** (the button at the top right of this page) helps other people find it. Thank you!
+
 ## Download and install
 
 1. Open the [Releases page](../../releases) and pick the newest version.
@@ -41,12 +43,13 @@ Some antivirus and sandbox services flag new, unsigned installers like this one 
 - Blocks third-party ads and trackers (Settings > Privacy and security). It cannot block ads a site serves itself, such as YouTube video ads.
 - Opens http:// addresses over https when the site supports it.
 - One box for addresses and searches (DuckDuckGo by default, Google and Bing available).
+- Reader view: a clean, distraction-free page for articles (F9). Mute tabs, picture in picture for videos, and a What's new page after each update.
 - Find in page, per-site zoom, bookmarks, history and downloads.
 - Privacy first: sites must ask before using your camera, microphone or location, and bad certificates are never accepted silently.
 
 ## What is not here yet
 
-- No extensions. Chrome Web Store extensions do not work in Lumen.
+- Extensions are experimental: they are off by default (turn them on in Settings), have no toolbar buttons yet, and not every extension works.
 - No password manager or sync. Only bookmarks can be imported, not history or passwords.
 - No Netflix-style protected video (Widevine).
 
@@ -61,6 +64,7 @@ Some antivirus and sandbox services flag new, unsigned installers like this one 
 | Back / forward / home | Alt+Left / Alt+Right / Alt+Home |
 | Reload / hard reload | F5 / Ctrl+Shift+R |
 | Find in page | Ctrl+F |
+| Reader view | F9 or Ctrl+Alt+R |
 | Bookmark page | Ctrl+D |
 | History / downloads / settings | Ctrl+H / Ctrl+J / Ctrl+, |
 | Zoom in / out / reset | Ctrl+= / Ctrl+- / Ctrl+0 |
