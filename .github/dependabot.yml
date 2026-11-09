@@ -1,0 +1,8 @@
+version: 2
+updates:
+  # Electron carries Chromium's security fixes, so keep it moving. Dependabot opens a pull request for each new release.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5

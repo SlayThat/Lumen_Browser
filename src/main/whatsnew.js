@@ -5,6 +5,10 @@
 //
 // feature: { chip, title, text, steps?: [..], art?: 'newtab' | 'whatsnew' | 'downloads' | 'menu' | 'rows', rows?: [[label, state], ..], color: 1-4 }
 const NOTES = [
+  { version: '0.9.1', features: [
+    { chip: 'Security', title: 'A much newer Chromium', color: 1, art: 'rows', rows: [['Browser engine', 'Updated'], ['Security fixes', 'Current again'], ['Your settings', 'Kept']],
+      text: 'Lumen now runs on a current, supported version of Chromium (through Electron 44). The old one no longer received security fixes, so this is the most important update in a while. Nothing changes in how you use Lumen.' }
+  ] },
   { version: '0.9.0', features: [
     { chip: 'Downloads', title: 'See your downloads as they happen', color: 1, art: 'downloads',
       text: 'A download button now appears in the toolbar. A ring fills while a file downloads, a check shows when it is done, and a small panel opens by itself so you can see what is coming in. No more guessing whether a download started.',
