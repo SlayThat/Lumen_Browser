@@ -18,7 +18,7 @@ Lumen is a Chromium-based browser (Electron). Its own code is in `src/`, and you
 - Lumen's own pages cannot be shown inside another site, and the interface can only send the messages on a fixed allow-list, which the main process checks again.
 - Release builds turn off Electron's Node mode (`ELECTRON_RUN_AS_NODE`), the `NODE_OPTIONS` variable and `--inspect` flags, and load code only from the packed app archive. Updates never install an older version.
 
-What Lumen does not do yet: it has no malware or phishing-site list (like Chrome's Safe Browsing), the Windows installer is not code-signed, and it does not check an installed file's integrity at startup. Keep Lumen updated, because browser security fixes come from Chromium through Electron.
+What Lumen does not do yet: it has no malware or phishing-site list (like Chrome's Safe Browsing), the Windows installer is not code-signed, and it does not check an installed file's integrity at startup. Lumen has no built-in password manager or password saving yet, so it never stores your passwords. It has not had an independent security audit. Keep Lumen updated, because browser security fixes come from Chromium through Electron. Electron supports only its three newest major versions, so Lumen is moved to a supported one regularly (a weekly Dependabot check opens a pull request for each new Electron release).
 
 ## Why scanners sometimes flag the installer
 
