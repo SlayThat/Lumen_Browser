@@ -71,6 +71,7 @@ class Win {
       this.lastHash = null;
       this.pushState(true);
       this.send('settings', S.view());
+      this.pushPw(false);
       this.send('downloads', S.downloadSnapshot());
       if (!this.bw.isVisible() && !this.closed) { this.bw.show(); }
       if (S.startNotice) { const n = S.startNotice; S.startNotice = null; setTimeout(() => this.toast(n), 700); }
@@ -128,17 +129,57 @@ class Win {
     if (this.uiMode === 'full') return h;
     return Math.min(h, this.stripH() + (this.uiMode === 'extra' ? this.uiExtra : 0));
   }
+  // Width of the vertical tabs list, or 0 when tabs are in the top row (setting off, fullscreen, or a narrow window).
+  sideW() {
+    if (!S.settings.data.verticalTabs || this.isFullscreen() || this.closed) return 0;
+    return this.bw.getContentSize()[0] >= 720 ? C.SIDE_W : 0;
+  }
+  syncSidebar(sw, h) {
+    if (sw > 0 && !this.side) {
+      this.side = new WebContentsView({
+        webPreferences: {
+          preload: path.join(__dirname, '..', 'preload', 'ui-preload.js'),
+          partition: 'lumen-ui',
+          contextIsolation: true, nodeIntegration: false, sandbox: true, webviewTag: false, spellcheck: false
+        }
+      });
+      this.side.setBackgroundColor('#00000000');
+      const swc = this.side.webContents;
+      this.sideId = swc.id;
+      this.sideReady = false;
+      S.uiToWin.set(swc.id, this);
+      swc.on('before-input-event', (event, input) => { if (this.handleKey(input, event)) event.preventDefault(); });
+      swc.on('will-navigate', (e) => e.preventDefault());
+      swc.setWindowOpenHandler(() => ({ action: 'deny' }));
+      swc.on('did-finish-load', () => { this.sideReady = true; this.pushState(true); });
+      swc.loadURL('lumen://app/side.html').catch(() => {});
+      this.bw.contentView.addChildView(this.side);
+      this.bw.contentView.addChildView(this.ui); // the glass toolbar stays on top
+    } else if (sw === 0 && this.side) {
+      const v = this.side;
+      this.side = null; this.sideReady = false;
+      S.uiToWin.delete(this.sideId);
+      try { this.bw.contentView.removeChildView(v); } catch (e) { /* already gone */ }
+      try { if (!v.webContents.isDestroyed()) v.webContents.close(); } catch (e) { /* already gone */ }
+    }
+    if (this.side) {
+      const top = this.stripH();
+      this.side.setBounds({ x: 0, y: top, width: sw, height: Math.max(0, h - top) });
+    }
+  }
   layout() {
     if (this.closed) return;
     const [w, h] = this.bw.getContentSize();
     const full = this.isFullscreen();
     const uiH = this.uiHeight();
+    const sw = this.sideW();
+    this.syncSidebar(sw, h);
     this.ui.setBounds({ x: 0, y: 0, width: w, height: uiH });
     this.ui.setVisible(uiH > 0);
     const a = this.active;
     if (a && a.view) {
       const top = (S.settings.data.underlay || full) ? 0 : this.stripH();
-      a.view.setBounds({ x: 0, y: top, width: w, height: Math.max(0, h - top) });
+      a.view.setBounds({ x: sw, y: top, width: Math.max(0, w - sw), height: Math.max(0, h - top) });
     }
     this.pushState();
   }
@@ -207,6 +248,7 @@ class Win {
       if (prev.view) this.detachView(prev.view);
     }
     this.activeId = id;
+    this.pushPw(false);
     t.lastActive = Date.now();
     t.ensureAwake();
     require('./extensions').selectTab(t);
@@ -281,6 +323,7 @@ class Win {
       case 'gotoTab': { const t = arg >= 9 ? this.tabs[this.tabs.length - 1] : this.tabs[arg - 1]; if (t) this.activate(t.id); break; }
       case 'focusAddress': this.ui.webContents.focus(); this.send('cmd', { name: 'focusAddress' }); break;
       case 'find': this.ui.webContents.focus(); this.send('cmd', { name: 'find' }); break;
+      case 'tabsearch': this.ui.webContents.focus(); this.send('cmd', { name: 'tabsearch' }); break;
       case 'panel': this.ui.webContents.focus(); this.send('cmd', { name: 'panel', arg }); break;
       case 'bookmark': if (a && /^https?:/i.test(a.url)) { const on = S.toggleBookmark(a.url, a.title); this.toast(on ? 'Bookmarked' : 'Bookmark removed'); this.pushState(); } break;
       case 'reload': if (a) a.reload(!!arg); break;
@@ -308,6 +351,7 @@ class Win {
     const run = (n, a) => { this.command(n, a); return true; };
     // Match the physical R key, so it works on any keyboard layout (Cyrillic, AltGr layouts and so on).
     if (ctrl && alt && !shift && (input.code === 'KeyR' || k === 'r')) return run('reader');
+    if (ctrl && !alt && shift && (input.code === 'KeyA' || k === 'a')) return run('tabsearch');
     if (ctrl && !alt) {
       switch (k) {
         case 't': return shift ? run('reopenTab') : run('newTab');
@@ -348,11 +392,17 @@ class Win {
 
   // ---------- UI messaging ----------
   send(channel, payload) {
+    if (channel === 'state' && this.side && this.sideReady) {
+      const sw = this.side.webContents;
+      if (!sw.isDestroyed()) sw.send(channel, payload);
+    }
     const wc = this.ui && this.ui.webContents;
     if (this.closed || !wc || wc.isDestroyed() || !this.uiReady) return;
     wc.send(channel, payload);
   }
   toast(text) { this.send('toast', { text }); }
+  // Saved-login hints for the active tab (site usernames and a pending "save?" question, never a password).
+  pushPw(open) { this.send('pw:state', Object.assign({ tabId: this.activeId, open: !!open }, require('./passwords').stateFor(this.active))); }
 
   snapshot() {
     const a = this.active;
@@ -361,7 +411,7 @@ class Win {
     let canBack = false, canFwd = false;
     if (a && a.wc) { const h = a.wc.navigationHistory; canBack = h.canGoBack(); canFwd = h.canGoForward(); }
     return {
-      winId: this.id, isPrivate: this.isPrivate,
+      winId: this.id, isPrivate: this.isPrivate, sideW: this.sideW(),
       caption: C.NATIVE_CAPTION_BUTTONS ? 'native' : 'custom', captionW: C.CAPTION_W,
       maximized: this.bw.isMaximized(), fullscreen: this.isFullscreen(),
       activeId: this.activeId,
@@ -391,7 +441,7 @@ class Win {
     if (!items.length) return;
     const top = (S.settings.data.underlay || this.isFullscreen()) ? 0 : this.stripH();
     this.ctx = { tab, params };
-    this.send('ctx:show', { x: params.x, y: params.y + top, items });
+    this.send('ctx:show', { x: params.x + this.sideW(), y: params.y + top, items });
   }
   runContext(id) {
     const c = this.ctx;
@@ -434,11 +484,12 @@ class Win {
         const uiH = this.uiHeight();
         // Page under the toolbar: capture exactly what is behind the glass.
         // Page below the toolbar: capture the top of the page and let the shader mirror it upward.
+        const pw = Math.max(1, w - this.sideW());   // the page may start to the right of the tabs list
         let rect, ch, mirror = 0;
-        if (set.underlay) { rect = { x: 0, y: 0, width: w, height: uiH }; ch = uiH; }
+        if (set.underlay) { rect = { x: 0, y: 0, width: pw, height: uiH }; ch = uiH; }
         else {
           ch = Math.max(1, Math.min(h - this.stripH(), Math.max(this.stripH(), uiH - this.stripH())));
-          rect = { x: 0, y: 0, width: w, height: ch }; mirror = this.stripH();
+          rect = { x: 0, y: 0, width: pw, height: ch }; mirror = this.stripH();
         }
         const img = await wc.capturePage(rect);
         if (!this.closed && this.active === a && !img.isEmpty()) {
@@ -493,6 +544,7 @@ class Win {
     this.tabs = [];
     S.windows.delete(this);
     S.uiToWin.delete(this.uiId);
+    if (this.sideId) S.uiToWin.delete(this.sideId);
   }
 
   // ---------- settings ----------
@@ -501,7 +553,7 @@ class Win {
     for (const w of S.windows) {
       if (w.closed) continue;
       w.send('settings', S.view());
-      if (key === 'underlay' || key === 'bookmarksBar') { w.layout(); w.tabs.forEach(t => t.applyInset()); w.lastHash = null; w.captureSoon(); }
+      if (key === 'underlay' || key === 'bookmarksBar' || key === 'verticalTabs') { w.layout(); w.tabs.forEach(t => t.applyInset()); w.lastHash = null; w.captureSoon(); }
       if (key === 'glassMode') { w.lastHash = null; w.captureSoon(); }
       if (key === 'theme') w.updateAppearance();
     }

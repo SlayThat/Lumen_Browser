@@ -1,0 +1,35 @@
+/* Vertical tabs sidebar. A plain solid panel next to the page; the glass toolbar stays on top. */
+:root{
+  --fg:#0b1118; --fg2:rgba(11,17,24,.62); --hover:rgba(11,17,24,.07); --press:rgba(11,17,24,.13);
+  --accent:#0a62d6; --bg:#eef1f5; --edge:rgba(11,17,24,.12);
+  --font:"Segoe UI Variable Text","Segoe UI",system-ui,"Ubuntu","Cantarell","Noto Sans",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{--fg:#f1f5f9; --fg2:rgba(241,245,249,.66); --hover:rgba(255,255,255,.09); --press:rgba(255,255,255,.16); --accent:#6cb2ff; --bg:#12161c; --edge:rgba(255,255,255,.12); color-scheme:dark}
+}
+html[data-private]{--fg:#f3eefc; --fg2:rgba(243,238,252,.66); --hover:rgba(255,255,255,.1); --press:rgba(255,255,255,.17); --accent:#c3a2ff; --bg:#1a1230; --edge:rgba(214,190,255,.2); color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg)}
+body{font:13px/1.35 var(--font);color:var(--fg);user-select:none;-webkit-user-select:none;cursor:default}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:default}
+#side{height:100%;display:flex;flex-direction:column;padding:6px 8px 8px;gap:6px;border-right:1px solid var(--edge)}
+#list{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:2px;scrollbar-width:thin}
+.vt{position:relative;display:flex;align-items:center;gap:9px;height:34px;flex:none;padding:0 6px 0 10px;border-radius:10px;width:100%;text-align:left}
+.vt:hover{background:var(--hover)}
+.vt[aria-selected="true"]{background:var(--press);font-weight:600}
+.vt.sleeping .vtt,.vt.sleeping .vf{opacity:.55}
+.vt:focus-visible,#add:focus-visible,.vx:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.vf{width:16px;height:16px;flex:none;border-radius:4px;display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff;overflow:hidden}
+.vf img{width:16px;height:16px;display:block}
+.vspin{width:14px;height:14px;flex:none;border-radius:50%;border:2px solid var(--hover);border-top-color:var(--accent);animation:vs .8s linear infinite}
+@keyframes vs{to{transform:rotate(360deg)}}
+.vtt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vi{flex:none;color:var(--fg2);display:none}
+.vt.audible .vi.snd,.vt.pinned .vi.pin{display:block}
+.vx{flex:none;width:22px;height:22px;border-radius:11px;display:none;place-items:center;color:var(--fg2)}
+.vt:hover .vx,.vt[aria-selected="true"] .vx{display:grid}
+.vx:hover{background:var(--press);color:var(--fg)}
+#add{flex:none;display:flex;align-items:center;gap:9px;height:34px;padding:0 10px;border-radius:10px;color:var(--fg2);width:100%;text-align:left}
+#add:hover{background:var(--hover);color:var(--fg)}
+@media (prefers-reduced-motion:reduce){.vspin{animation:none}}

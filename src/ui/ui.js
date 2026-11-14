@@ -147,7 +147,7 @@
       if (modal) mode = 'full';
       else {
         let bottom = STRIP;
-        for (const id of ['findbar', 'suggest', 'perm', 'perf', 'toast', 'dlpop']) {
+        for (const id of ['findbar', 'suggest', 'perm', 'perf', 'toast', 'dlpop', 'pwpop', 'tabpop']) {
           const e = $(id);
           if (!e.hidden) bottom = Math.max(bottom, e.offsetTop + e.offsetHeight + 18);
         }
@@ -564,6 +564,7 @@
       { label: 'Downloads', key: 'Ctrl+J', run: () => openSheet('downloads') },
       { sep: true },
       { label: 'Find in page', key: 'Ctrl+F', run: () => openFind() },
+      { label: 'Search tabs', key: 'Ctrl+Shift+A', run: () => openTabSearch() },
       { zoom: true },
       { label: 'Reader view', key: 'Ctrl+Alt+R', run: () => L.send('cmd', 'reader') },
       { label: 'Print…', key: 'Ctrl+P', run: () => L.send('cmd', 'print') },
@@ -572,7 +573,7 @@
       { label: 'Settings', key: 'Ctrl+,', run: () => openSheet('settings') }
     ];
   }
-  function closeMenus() { ['menu', 'ctx', 'navmenu', 'dlpop'].forEach(id => hidePop($(id))); }
+  function closeMenus() { ['menu', 'ctx', 'navmenu', 'dlpop', 'pwpop', 'tabpop'].forEach(id => hidePop($(id))); }
   function openMenu(el, items, x, y, alignRight) {
     closeMenus();
     el.textContent = '';
@@ -866,6 +867,102 @@
   document.addEventListener('pointerdown', (e) => { if (!dlpop.hidden && !dlpop.contains(e.target) && !e.target.closest('#dlbtn')) hidePop(dlpop); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !dlpop.hidden) hidePop(dlpop); });
 
+  // ---------- saved logins ----------
+  const pwbtn = $('pwbtn'), pwpop = $('pwpop');
+  setIcon(pwbtn, 'key', 18);
+  let pwState = { items: [], ask: null };
+  const pwHost = (origin) => { try { return new URL(origin).host; } catch (e) { return origin; } };
+  function renderPw() {
+    const head = $('pwhead'), body = $('pwbody');
+    body.textContent = '';
+    const ask = pwState.ask;
+    if (ask) {
+      head.textContent = (ask.kind === 'update' ? 'Update password for ' : 'Save password for ') + pwHost(ask.origin) + '?';
+      body.append(h('div', { class: 'pwuser', text: ask.user }),
+        h('div', { class: 'pwnote', text: 'Encrypted with your system keychain. Lumen never shows it on screen.' }),
+        h('div', { class: 'btnrow' },
+          h('button', { class: 'btn', type: 'button', text: 'Never', title: 'Never offer for this site', onclick: () => { L.send('pw:answer', 'never'); hidePop(pwpop); } }),
+          h('button', { class: 'btn', type: 'button', text: 'Not now', onclick: () => { L.send('pw:answer', 'dismiss'); hidePop(pwpop); } }),
+          h('button', { class: 'btn primary', type: 'button', text: ask.kind === 'update' ? 'Update' : 'Save', onclick: () => { L.send('pw:answer', 'save'); hidePop(pwpop); } })));
+      return;
+    }
+    head.textContent = 'Saved logins';
+    if (!pwState.items.length) { body.append(h('div', { class: 'pwnote', text: 'No saved logins for this site.' })); return; }
+    pwState.items.forEach((it) => {
+      body.append(h('button', { class: 'pwitem', type: 'button', onclick: () => { L.send('pw:fill', it.id); hidePop(pwpop); L.send('focusPage'); } },
+        h('span', { html: window.icon('key', 16) }), h('span', { text: it.user })));
+    });
+  }
+  function openPwPop() {
+    if (pwbtn.hidden) return;
+    closeMenus();
+    pwpop.hidden = false;
+    renderPw();
+    const r = pwbtn.getBoundingClientRect(), w = pwpop.offsetWidth;
+    const W = (S.size || [window.innerWidth])[0];
+    const left = Math.max(8, Math.min(r.right - w, W - w - 8));
+    pwpop.style.left = left + 'px'; pwpop.style.top = (r.bottom + 8) + 'px';
+    pwpop.style.setProperty('--ox', (r.left + r.width / 2 - left) + 'px');
+    showPop(pwpop);
+  }
+  pwbtn.addEventListener('click', () => { if (!pwpop.hidden && pwpop.classList.contains('in')) hidePop(pwpop); else openPwPop(); });
+  document.addEventListener('pointerdown', (e) => { if (!pwpop.hidden && !pwpop.contains(e.target) && !e.target.closest('#pwbtn')) hidePop(pwpop); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !pwpop.hidden) hidePop(pwpop); });
+  L.on('pw:state', (p) => {
+    pwState = { items: p.items || [], ask: p.ask || null };
+    const show = !!(pwState.items.length || pwState.ask);
+    pwbtn.hidden = !show;
+    pwbtn.dataset.ask = pwState.ask ? '1' : '0';
+    if (!show && !pwpop.hidden) hidePop(pwpop);
+    else if (pwState.ask && p.open) openPwPop();
+    else if (!pwpop.hidden) renderPw();
+    poke(); requestLayout();
+  });
+
+  // ---------- tab search ----------
+  const tabpop = $('tabpop'), tabq = $('tabq'), tablist = $('tablist');
+  let tabSel = 0, tabRows = [];
+  function tabMatches(q) {
+    const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+    return S.tabs.filter((t) => { const hay = (t.title + ' ' + t.url).toLowerCase(); return words.every(w => hay.includes(w)); });
+  }
+  function renderTabSearch() {
+    tablist.textContent = '';
+    tabRows = tabMatches(tabq.value);
+    if (tabSel >= tabRows.length) tabSel = Math.max(0, tabRows.length - 1);
+    if (!tabRows.length) { tablist.append(h('div', { class: 'tsempty', text: 'No open tab matches.' })); return; }
+    tabRows.forEach((t, i) => {
+      const row = h('button', { class: 'tsi' + (t.sleeping ? ' sleeping' : ''), type: 'button', role: 'option', 'aria-selected': String(i === tabSel) },
+        favNode(t), h('span', { class: 'tsm' }, h('span', { class: 'tst', text: t.title }), h('span', { class: 'tsu', text: t.url === 'lumen://newtab' ? '' : t.url })));
+      row.addEventListener('click', () => pickTab(t));
+      row.addEventListener('mousemove', () => { if (tabSel !== i) { tabSel = i; Array.from(tablist.children).forEach((c, j) => c.setAttribute('aria-selected', String(j === i))); } });
+      tablist.append(row);
+    });
+  }
+  function pickTab(t) { hidePop(tabpop); L.send('tab:activate', t.id); }
+  function openTabSearch() {
+    closeMenus();
+    tabq.value = '';
+    tabSel = Math.max(0, S.tabs.findIndex(t => t.id === S.activeId));
+    tabpop.hidden = false;
+    renderTabSearch();
+    showPop(tabpop);
+    tabq.focus();
+    const sel = tablist.children[tabSel]; if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: 'nearest' });
+  }
+  tabq.addEventListener('input', () => { tabSel = 0; renderTabSearch(); });
+  tabq.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      if (!tabRows.length) return;
+      e.preventDefault();
+      tabSel = (tabSel + (e.key === 'ArrowDown' ? 1 : -1) + tabRows.length) % tabRows.length;
+      Array.from(tablist.children).forEach((c, j) => c.setAttribute('aria-selected', String(j === tabSel)));
+      const sel = tablist.children[tabSel]; if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Enter') { e.preventDefault(); if (tabRows[tabSel]) pickTab(tabRows[tabSel]); }
+    else if (e.key === 'Escape') { e.preventDefault(); hidePop(tabpop); L.send('focusPage'); }
+  });
+  document.addEventListener('pointerdown', (e) => { if (!tabpop.hidden && !tabpop.contains(e.target)) hidePop(tabpop); });
+
   function seg(key, options, cur, onChange) {
     const box = h('div', { class: 'seg', role: 'group' });
     options.forEach(([val, label]) => {
@@ -894,6 +991,30 @@
           actionButton('Remove', () => { L.send('extensions:remove', x.id); row.remove(); }));
         box.appendChild(row);
       });
+    });
+    return box;
+  }
+  function passwordList() {
+    const box = h('div', { class: 'extlist' });
+    L.invoke('pw:list').then((r) => {
+      if (!r) return;
+      if (!r.available) {
+        box.append(h('div', { class: 'srow' }, h('div', { class: 'sl' }, 'Password saving is off on this computer',
+          h('small', { text: r.platform === 'linux' ? 'Lumen needs a system keychain to encrypt passwords, such as GNOME Keyring or KWallet. Install one, sign in to it and restart Lumen.' : 'The system keychain is not available, so Lumen cannot encrypt passwords.' }))));
+        return;
+      }
+      if (!r.items.length) { box.append(h('div', { class: 'srow' }, h('div', { class: 'sl' }, 'No saved logins yet', h('small', { text: 'Sign in to a site and Lumen asks if you want to save it.' })))); return; }
+      r.items.forEach((x) => {
+        const row = h('div', { class: 'srow pwrow' }, h('div', { class: 'sl' }, pwHost(x.origin), h('small', { text: x.user })),
+          h('span', { class: 'srowbtns' }, actionButton('Copy password', () => L.send('pw:copy', x.id)), actionButton('Remove', () => { L.send('pw:delete', x.id); row.remove(); })));
+        box.append(row);
+      });
+      let armed = null;
+      const all = actionButton('Remove all', () => {
+        if (!armed) { all.textContent = 'Click again to confirm'; armed = setTimeout(() => { armed = null; all.textContent = 'Remove all'; }, 3000); return; }
+        clearTimeout(armed); L.send('pw:clear'); box.textContent = '';
+      });
+      box.append(h('div', { class: 'srow' }, h('div', { class: 'sl', text: 'All saved logins' }), all));
     });
     return box;
   }
@@ -961,12 +1082,17 @@
           h('span', { class: 'srowbtns' }, actionButton('What’s new', () => L.send('tab:new', 'lumen://whatsnew')), actionButton('Check now', () => L.send('app:checkUpdate')))),
         toggle('Show bookmarks bar', null, s.bookmarksBar, 'bookmarksBar'),
         importRow(),
+        toggle('Vertical tabs (experimental)', 'Shows your tabs in a list down the left side instead of a row on top.', s.verticalTabs, 'verticalTabs'),
         toggle('Restore tabs on launch', null, s.restoreSession, 'restoreSession'),
         h('div', { class: 'srow' }, h('div', { class: 'sl' }, 'Put background tabs to sleep after', h('small', { text: 'Sleeping tabs free their memory and reload when you open them.' })),
           seg('sleepMinutes', [[0, 'Never'], [10, '10 min'], [20, '20 min'], [60, '1 hour']], s.sleepMinutes))),
       group('Privacy and security',
         toggle('Block ads and trackers', 'Blocks third-party ad and tracking networks. It cannot block ads a site serves itself, such as YouTube video ads.' + (s.adblockCount ? ' Blocked ' + s.adblockCount.toLocaleString() + ' requests since Lumen started.' : ''), s.adblock, 'adblock'),
-        toggle('Use secure connections when possible', 'Opens http:// addresses over https first. If a site has no https, Lumen opens it over http and tells you.', s.httpsFirst, 'httpsFirst')),
+        toggle('Use secure connections when possible', 'Opens http:// addresses over https first. If a site has no https, Lumen opens it over http and tells you.', s.httpsFirst, 'httpsFirst'),
+        toggle('Warn about phishing sites', 'Checks each address against a list of reported phishing sites stored on this computer. No address you visit is sent anywhere. Lumen downloads the updated list from GitHub a few times a day.', s.safeBrowsing, 'safeBrowsing')),
+      group('Passwords',
+        toggle('Offer to save passwords', 'Logins are encrypted with your system keychain (Windows or Linux). Lumen only fills a login when you pick it, and only on the exact site it was saved for. Anyone who can sign in to your computer as you can use the keychain, so lock your computer.', s.passwords, 'passwords'),
+        passwordList()),
       group('Extensions (experimental)',
         toggle('Allow extensions', 'Add extensions from the Chrome Web Store: open chromewebstore.google.com and choose Add. Restart Lumen after changing this. Extensions can read and change the pages you visit, so add only ones you trust. They do not run in private windows, and ad blockers that rely on web request filtering may not work next to Lumen’s own blocker.', s.extensions, 'extensions'),
         s.extensions ? extensionList() : null),
@@ -1041,6 +1167,7 @@
     if (lastActive && lastActive !== s.activeId && !$('findbar').hidden) { hidePop($('findbar')); $('findcount').textContent = ''; }
     lastActive = s.activeId;
     if (s.stripH && s.stripH !== STRIP) { STRIP = s.stripH; doc.style.setProperty('--strip', STRIP + 'px'); requestLayout(); }
+    doc.classList.toggle('vtabs', (s.sideW || 0) > 0);
     renderCaption();
     renderTabs();
     renderNav();
@@ -1059,6 +1186,7 @@
   L.on('cmd', (c) => {
     if (c.name === 'focusAddress') addr.focus();
     else if (c.name === 'find') openFind();
+    else if (c.name === 'tabsearch') openTabSearch();
     else if (c.name === 'panel' && ['history', 'bookmarks', 'downloads', 'settings'].includes(c.arg)) openSheet(c.arg);
   });
 

@@ -257,3 +257,30 @@ html.sheetopen #bmbar{opacity:0;pointer-events:none}
 .dli .ru{display:block;color:var(--fg2);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dli .rbtns{display:flex;gap:0;flex:none}
 @media (prefers-reduced-motion:reduce){.dlic{animation:none !important}.dlring .prg{transition:none}}
+
+/* saved logins and tab search */
+#pwpop{width:320px;padding:14px;display:flex;flex-direction:column;gap:10px;--oy:0}
+#pwhead{font-weight:650;line-height:1.35;word-break:break-word}
+#pwbody{display:flex;flex-direction:column;gap:4px}
+#pwbody .pwuser{color:var(--fg2);word-break:break-all;margin-bottom:4px}
+#pwbody .pwnote{color:var(--fg2);font-size:12px}
+.pwitem{display:flex;align-items:center;gap:10px;height:40px;padding:0 10px;border-radius:12px;text-align:left;width:100%}
+.pwitem:hover,.pwitem:focus-visible{background:var(--hover)}
+.pwitem span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pwitem svg{flex:none;color:var(--fg2)}
+#pwbtn[data-ask="1"]{color:var(--accent)}
+#tabpop{left:50%;top:calc(var(--strip) + 6px);transform:translateX(-50%) scale(.96);width:460px;max-width:calc(100vw - 24px);padding:10px;display:flex;flex-direction:column;gap:8px}
+#tabpop.in{transform:translateX(-50%)}
+#tabq{height:38px;border-radius:19px;padding:0 16px;background:var(--hover);width:100%}
+#tablist{display:flex;flex-direction:column;gap:2px;max-height:340px;overflow:auto}
+.tsi{display:flex;align-items:center;gap:10px;height:42px;padding:0 10px;border-radius:12px;text-align:left;width:100%}
+.tsi[aria-selected="true"],.tsi:hover{background:var(--press)}
+.tsi .tsm{flex:1;min-width:0}
+.tsi .tst{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tsi .tsu{display:block;color:var(--fg2);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tsi.sleeping .tst{opacity:.6}
+.tsempty{padding:14px 10px;color:var(--fg2)}
+.pwrow small{word-break:break-all}
+
+/* vertical tabs: the tab row moves to the side list */
+.vtabs #tabstrip{display:none}

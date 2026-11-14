@@ -1,4 +1,5 @@
 'use strict';
+const path = require('path');
 const { WebContentsView } = require('electron');
 const S = require('./state');
 const C = require('./config');
@@ -28,6 +29,8 @@ class Tab {
     this.readerFor = '';
     this.pinned = !!opts.pinned;
     this.upgrade = null;
+    this.pwItems = [];
+    this.pwAsk = null;
     this.cssKey = null;
     this.insetGen = 0;
     this.lastGesture = 0;
@@ -43,6 +46,7 @@ class Tab {
     const view = new WebContentsView({
       webPreferences: {
         partition: this.win.partition,
+        preload: path.join(__dirname, '..', 'preload', 'page-preload.js'),
         contextIsolation: true, nodeIntegration: false, sandbox: true,
         webviewTag: false, spellcheck: true
       }
@@ -69,6 +73,7 @@ class Tab {
 
   bind(wc) {
     const win = this.win;
+    require('./passwords').attach(this, wc);
     const changed = () => win.pushState();
 
     wc.on('page-title-updated', (e, title) => {
@@ -86,7 +91,7 @@ class Tab {
     wc.on('media-paused', () => { this.audible = false; changed(); });
 
     wc.on('did-navigate', (e, url) => {
-      if (url.startsWith('lumen://error')) this.url = this.errorFor || this.url;
+      if (url.startsWith('lumen://error') || url.startsWith('lumen://warning')) this.url = this.errorFor || this.url;
       else { this.errorFor = ''; this.url = url; this.upgrade = null; }
       if (!win.isPrivate && !url.startsWith('lumen://')) S.addHistory(url, wc.getTitle());
       this.applyInset();
@@ -105,7 +110,16 @@ class Tab {
 
     wc.on('did-fail-load', (e, code, desc, validatedURL, isMainFrame) => {
       if (!isMainFrame || code === -3) return; // -3 = aborted (user navigated away)
-      if (validatedURL.startsWith('lumen://error')) return;
+      if (validatedURL.startsWith('lumen://error') || validatedURL.startsWith('lumen://warning')) return;
+      // A load we cancelled because the site is on the phishing list: show the warning page instead of an error.
+      const sb = this.sbPending;
+      if (sb && code === -20 && Date.now() - sb.at < 15000 && sb.url.replace(/#.*$/, '') === validatedURL.replace(/#.*$/, '')) {
+        this.sbPending = null;
+        this.errorFor = sb.url;
+        this.url = sb.url;
+        wc.loadURL('lumen://warning?url=' + encodeURIComponent(sb.url)).catch(() => {});
+        return;
+      }
       // HTTPS-first: the site has no working https, so open it over http once and say so.
       if (/^https:\/\//i.test(validatedURL) && nf.shouldFallBack(code)) {
         const host = nf.hostOfUrl(validatedURL);

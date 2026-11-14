@@ -29,6 +29,9 @@ const SETTINGS = {
   restoreSession: isBool,
   adblock: isBool,
   httpsFirst: isBool,
+  safeBrowsing: isBool,
+  passwords: isBool,
+  verticalTabs: isBool,
   bookmarksBar: isBool,
   extensions: isBool
 };
@@ -72,7 +75,7 @@ function register() {
   });
   on('tab:reload', (w, id) => { const t = isInt(id) && w.findTab(id); if (t) { t.ensureAwake(); t.reload(false); } });
   on('cmd', (w, name, arg) => {
-    const allowed = ['newTab', 'closeTab', 'reopenTab', 'reload', 'stop', 'back', 'forward', 'home', 'zoom', 'fullscreen', 'devtools', 'print', 'newWindow', 'newPrivateWindow', 'bookmark', 'reader'];
+    const allowed = ['newTab', 'closeTab', 'reopenTab', 'reload', 'stop', 'back', 'forward', 'home', 'zoom', 'fullscreen', 'devtools', 'print', 'newWindow', 'newPrivateWindow', 'bookmark', 'reader', 'tabsearch'];
     if (isStr(name, 32) && allowed.includes(name)) w.command(name, arg === 'in' || arg === 'out' || arg === 'reset' ? arg : (isBool(arg) ? arg : undefined));
   });
 
@@ -105,6 +108,15 @@ function register() {
 
   // ---- permissions ----
   on('perm:answer', (w, o) => { if (o && isInt(o.id)) w.answerPermission(o.id, o.allow === true, o.remember === true); });
+
+  // ---- saved logins ----
+  const pw = require('./passwords');
+  on('pw:answer', (w, action) => { if (['save', 'never', 'dismiss'].includes(action)) pw.answer(w, action); });
+  on('pw:fill', (w, id) => { if (isStr(id, 40)) pw.fill(w, id); });
+  on('pw:copy', (w, id) => { if (isStr(id, 40)) pw.copy(w, id); });
+  on('pw:delete', (w, id) => { if (isStr(id, 40)) pw.remove(id); });
+  on('pw:clear', () => pw.clearAll());
+  handle('pw:list', () => pw.list());
 
   // ---- bookmarks / history ----
   handle('bookmarks:bar', () => S.barItems());

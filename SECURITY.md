@@ -9,7 +9,9 @@ Please report security problems privately through the repository's **Security** 
 Lumen is a Chromium-based browser (Electron). Its own code is in `src/`, and you can read all of it.
 
 - It does not collect or send analytics, crash reports or personal data. It has no server of its own.
-- The only connection Lumen makes that you did not ask for is the update check, which asks GitHub Releases whether a newer version exists (installed copy only).
+- The only connections Lumen makes that you did not ask for are the update check, which asks GitHub Releases whether a newer version exists (installed copy only), and the download of the public phishing-site list (a plain file from GitHub, a few times a day; turn it off in Settings). Neither sends the addresses you visit.
+- Phishing warnings: Lumen checks each page address against that list on your computer. The list can be wrong or out of date, and it only knows sites someone has already reported.
+- Saved logins: usernames and passwords are encrypted with the operating system's key storage (Windows DPAPI, or the Linux keyring through libsecret or KWallet) before they are written to disk. If Linux has no keyring, Lumen refuses to save passwords instead of storing them weakly. Lumen fills a login only after you pick it, only in the top page, and only on the exact site it was saved for. Passwords never go to the toolbar or to web pages except when filling. Anyone who can use your signed-in computer account can read what the keychain protects, so lock your computer; this is the same protection other browsers use by default.
 - It does not run other programs or read other programs' files. It writes to the registry only to register itself as a browser option for Windows (in the installer, and when you press **Make default**).
 - It reads another browser's bookmarks file only when you press **Import** in Settings, and only the bookmarks (not passwords, cookies or history). You can also import from a file you choose yourself.
 - Pages run in sandboxed processes with Node.js turned off. Camera, microphone, location and similar permissions ask first. USB, serial, HID and Bluetooth access is always refused.
@@ -18,7 +20,7 @@ Lumen is a Chromium-based browser (Electron). Its own code is in `src/`, and you
 - Lumen's own pages cannot be shown inside another site, and the interface can only send the messages on a fixed allow-list, which the main process checks again.
 - Release builds turn off Electron's Node mode (`ELECTRON_RUN_AS_NODE`), the `NODE_OPTIONS` variable and `--inspect` flags, and load code only from the packed app archive. Updates never install an older version.
 
-What Lumen does not do yet: it has no malware or phishing-site list (like Chrome's Safe Browsing), the Windows installer is not code-signed, and it does not check an installed file's integrity at startup. Lumen has no built-in password manager or password saving yet, so it never stores your passwords. It has not had an independent security audit. Keep Lumen updated, because browser security fixes come from Chromium through Electron. Electron supports only its three newest major versions, so Lumen is moved to a supported one regularly (a weekly Dependabot check opens a pull request for each new Electron release).
+What Lumen does not do yet: it has no malware-download protection or real-time lookups like Chrome's Safe Browsing (only the phishing list above), the Windows installer is not code-signed, and it does not check an installed file's integrity at startup. The password manager is new and basic. Lumen has not had an independent security audit. Keep Lumen updated, because browser security fixes come from Chromium through Electron. Electron supports only its three newest major versions, so Lumen is moved to a supported one regularly (a weekly Dependabot check opens a pull request for each new Electron release).
 
 ## Why scanners sometimes flag the installer
 

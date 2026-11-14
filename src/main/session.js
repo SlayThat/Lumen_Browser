@@ -10,6 +10,7 @@ const { hostOf } = require('./omnibox');
 const pages = require('./pages');
 const nf = require('./netfilter');
 const safety = require('./safety');
+const safeguard = require('./safeguard');
 
 const UI_ROOT = path.join(__dirname, '..', 'ui');
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png' };
@@ -59,6 +60,23 @@ function lumenHandler(isUi) {
         S.proceedTokens.add(token);
         if (S.proceedTokens.size > 50) S.proceedTokens.delete(S.proceedTokens.values().next().value);
         return htmlResponse(pages.renderError({ desc: q.get('desc') || '', url, code: q.get('code') || '', token }));
+      }
+      case 'warning': {
+        const url = u.searchParams.get('url') || '';
+        const host = hostOf(url);
+        if (!/^https?:\/\//i.test(url) || !host) return new Response('Forbidden', { status: 403 });
+        const token = crypto.randomBytes(16).toString('hex');
+        S.proceedTokens.add(token);
+        if (S.proceedTokens.size > 50) S.proceedTokens.delete(S.proceedTokens.values().next().value);
+        return htmlResponse(pages.renderWarning({ url, host, token }));
+      }
+      case 'sbproceed': {
+        const q = u.searchParams;
+        const token = q.get('token'); const host = q.get('host'); const url = q.get('url') || '';
+        if (!token || !S.proceedTokens.has(token) || !host || hostOf(url) !== host) return new Response('Forbidden', { status: 403 });
+        S.proceedTokens.delete(token);
+        S.sbAllow.add(host);
+        return htmlResponse(pages.renderProceed(url));
       }
       case 'proceed': {
         const q = u.searchParams;
@@ -168,6 +186,12 @@ function prepare(partition, opts) {
     try {
       const set = S.settings.data;
       if (details.resourceType === 'mainFrame') {
+        if (set.safeBrowsing && safeguard.check(details.url)) {
+          // Cancel the load; the tab then shows the warning page (see did-fail-load in tab.js).
+          const tab = details.webContents && S.wcToTab.get(details.webContents.id);
+          if (tab) tab.sbPending = { url: details.url, at: Date.now() };
+          return callback({ cancel: true });
+        }
         if (set.httpsFirst) {
           const up = nf.upgradeUrl(details.url, S.httpAllow);
           if (up) {
