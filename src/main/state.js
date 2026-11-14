@@ -11,6 +11,7 @@ const S = {
   prepared: new Set(),    // session partitions that have been set up
   certAllow: new Set(),   // hosts the user chose to proceed to despite a certificate error
   proceedTokens: new Set(),
+  sbAllow: new Set(),     // hosts the user chose to open despite a phishing warning
   downloads: [],
   nextDownloadId: 1,
   inputEventSeen: false,
@@ -45,7 +46,7 @@ const S = {
     return Object.assign({}, d, { adblockCount: this.blockedCount, platform: process.platform }, this.gpuDown ? { glassMode: 'off' } : {});
   },
   flushAll() {
-    for (const s of [this.settings, this.history, this.bookmarks, this.sessionStore, this.permissions]) if (s) s.flush();
+    for (const s of [this.settings, this.history, this.bookmarks, this.sessionStore, this.permissions, this.passwordStore]) if (s) s.flush();
   },
 
   // ---- history ----

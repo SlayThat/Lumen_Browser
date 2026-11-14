@@ -6,6 +6,7 @@ module.exports = {
 
   // Height in CSS px of the glass area (tab row + toolbar row). Pages extend under it.
   STRIP_H: 92,
+  SIDE_W: 232,                  // width of the vertical tabs list
   BAR_H: 34,                    // extra height when the bookmarks bar is shown
 
   // false: frameless window with Lumen's own round window buttons on the left.
@@ -35,6 +36,9 @@ module.exports = {
     sleepMinutes: 20,           // 0 = never
     restoreSession: true,
     adblock: true,              // block third-party ad and tracker hosts
+    passwords: true,            // offer to save logins (encrypted with the system keychain)
+    verticalTabs: false,        // tabs in a side list instead of the top row
+    safeBrowsing: true,         // warn about known phishing sites (list checked on this PC)
     httpsFirst: true,           // try https for http:// addresses, fall back if the site has none
     bookmarksBar: true,
     extensions: false,          // experimental extension support; needs a restart

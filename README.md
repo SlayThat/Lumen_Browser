@@ -41,7 +41,9 @@ Some antivirus and sandbox services flag new, unsigned installers like this one 
 - Tabs you can drag to reorder, pin to the left (right-click a tab), sleeping background tabs, and private windows.
 - Bookmarks bar, and import from Chrome, Edge, Brave or an exported bookmarks file (Settings > General).
 - Blocks third-party ads and trackers (Settings > Privacy and security). It cannot block ads a site serves itself, such as YouTube video ads.
-- Opens http:// addresses over https when the site supports it.
+- Opens http:// addresses over https when the site supports it, and warns before opening sites on a list of reported phishing sites (the list is checked on your PC; no addresses are sent anywhere).
+- Saves logins, encrypted with your system keychain, and fills one only when you pick it, on the exact site it was saved for (Settings > Passwords).
+- Tab search (Ctrl+Shift+A) and optional vertical tabs (Settings > General, experimental).
 - One box for addresses and searches (DuckDuckGo by default, Google and Bing available).
 - Reader view: a clean, distraction-free page for articles (F9). Mute tabs, picture in picture for videos, and a What's new page after each update.
 - Find in page, per-site zoom, bookmarks, history, and a download button with a live progress ring.
@@ -50,7 +52,7 @@ Some antivirus and sandbox services flag new, unsigned installers like this one 
 ## What is not here yet
 
 - Extensions are experimental: they are off by default (turn them on in Settings), have no toolbar buttons yet, and not every extension works.
-- No password manager or sync. Only bookmarks can be imported, not history or passwords.
+- No sync, and no import of history or passwords. Only bookmarks can be imported. The password manager is new and basic: it saves, fills and removes logins, with no generator or breach check.
 - No Netflix-style protected video (Widevine).
 
 ## Keyboard shortcuts

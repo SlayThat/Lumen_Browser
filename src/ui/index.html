@@ -36,6 +36,7 @@
         <div id="loadbar" hidden></div>
       </div>
       <button id="star" class="ib" type="button" aria-label="Bookmark this page" title="Bookmark (Ctrl+D)"></button>
+      <button id="pwbtn" class="ib" type="button" hidden aria-label="Saved logins" aria-haspopup="dialog" title="Saved logins"></button>
       <button id="dlbtn" class="ib" type="button" hidden aria-label="Downloads" aria-haspopup="dialog" title="Downloads (Ctrl+J)">
         <svg class="dlring" viewBox="0 0 32 32" aria-hidden="true"><circle class="trk" cx="16" cy="16" r="13.5"/><circle class="prg" cx="16" cy="16" r="13.5" pathLength="100"/></svg>
         <span class="dlic" aria-hidden="true"></span><span class="dlck" aria-hidden="true"></span><span class="dldot" hidden></span>
@@ -73,6 +74,16 @@
   <span>Glass is running slowly on this PC.</span>
   <button id="perfswitch" class="btn primary sm" type="button">Use Frosted</button>
   <button id="perfdismiss" class="btn sm" type="button">Dismiss</button>
+</div>
+
+<div id="pwpop" class="pop" data-glass="0.9" hidden role="dialog" aria-label="Saved logins">
+  <div id="pwhead"></div>
+  <div id="pwbody"></div>
+</div>
+
+<div id="tabpop" class="pop" data-glass="0.9" hidden role="dialog" aria-label="Search tabs">
+  <input id="tabq" type="text" spellcheck="false" autocomplete="off" placeholder="Search open tabs" aria-label="Search open tabs">
+  <div id="tablist" role="listbox" aria-label="Open tabs"></div>
 </div>
 
 <div id="dlpop" class="pop" data-glass="0.9" hidden role="dialog" aria-label="Downloads">

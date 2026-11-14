@@ -5,6 +5,17 @@
 //
 // feature: { chip, title, text, steps?: [..], art?: 'newtab' | 'whatsnew' | 'downloads' | 'menu' | 'rows', rows?: [[label, state], ..], color: 1-4 }
 const NOTES = [
+  { version: '0.10.0', features: [
+    { chip: 'Passwords', title: 'Save and fill your logins', color: 1, art: 'rows', rows: [['Saved on this computer', 'Encrypted'], ['Filled only when you pick it', 'Always'], ['Shown on screen', 'Never']],
+      text: 'When you sign in to a site, Lumen offers to save the login. Logins are encrypted with your system keychain (Windows or Linux) and are never sent anywhere. Lumen fills a login only when you choose it, and only on the exact site it was saved for.',
+      steps: ['Sign in to a site and choose Save.', 'Next time, click the key button in the toolbar and pick the login.', 'See, copy or remove logins in Settings, under Passwords. You can turn it off there too.'] },
+    { chip: 'Safer browsing', title: 'Warnings for phishing sites', color: 2, art: 'rows', rows: [['Reported phishing sites', 'Warned'], ['Addresses you visit', 'Stay on your PC'], ['Open anyway', 'Your choice']],
+      text: 'Lumen now warns you before opening a site that is on a public list of reported phishing sites. The list is stored on your computer and checked there, so the addresses you visit are not sent to anyone. You can turn this off in Settings.' },
+    { chip: 'Tab search', title: 'Find any tab fast', color: 3, art: 'rows', rows: [['Ctrl+Shift+A', 'Search tabs'], ['Type a few words', 'Filter by title or site'], ['Enter', 'Jump to it']],
+      text: 'With lots of tabs open, press Ctrl+Shift+A (or choose Search tabs in the menu), type part of a title or address and jump straight to the tab.' },
+    { chip: 'Vertical tabs (experimental)', title: 'Tabs down the side', color: 4, art: 'rows', rows: [['Tabs', 'List on the left'], ['Long titles', 'Easy to read'], ['Default', 'Off']],
+      text: 'Prefer a list of tabs down the left side? Turn on Vertical tabs in Settings. It is off by default and experimental, so tell us if something looks wrong. Narrow windows keep the tab row on top.' }
+  ] },
   { version: '0.9.1', features: [
     { chip: 'Security', title: 'A much newer Chromium', color: 1, art: 'rows', rows: [['Browser engine', 'Updated'], ['Security fixes', 'Current again'], ['Your settings', 'Kept']],
       text: 'Lumen now runs on a current, supported version of Chromium (through Electron 44). The old one no longer received security fixes, so this is the most important update in a while. Nothing changes in how you use Lumen.' }

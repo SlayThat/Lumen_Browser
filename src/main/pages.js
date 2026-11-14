@@ -137,6 +137,33 @@ document.getElementById('retry').addEventListener('click',function(){location.hr
 </script></body></html>`;
 }
 
+function renderWarning({ url, host, token }) {
+  const n = nonce();
+  const go = `lumen://sbproceed?host=${encodeURIComponent(host)}&amp;token=${encodeURIComponent(token)}&amp;url=${encodeURIComponent(url)}`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Deceptive site ahead</title>
+<meta http-equiv="Content-Security-Policy" content="${csp(n)}">
+<style>${BASE_CSS}
+body{background:#3a0d12;color:#fff}
+main{max-width:600px;margin:0 auto;padding:clamp(60px,18vh,170px) 24px}
+.code{font:600 12px/1 ui-monospace,Consolas,monospace;letter-spacing:.06em;color:#ffb3ba;margin-bottom:16px}
+h1{font-weight:650;font-size:32px;line-height:1.15;margin:0 0 12px;letter-spacing:-.01em}
+p{color:#ffd9dc;margin:0 0 22px}
+.url{font:13px/1.4 ui-monospace,Consolas,monospace;word-break:break-all;color:#ffb3ba;margin-bottom:28px}
+button{font:inherit;font-weight:650;color:#3a0d12;background:#fff;border:0;border-radius:999px;padding:12px 26px;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.small{font-size:13px;margin-top:34px}.small a{color:#ffb3ba}
+</style></head><body><main>
+<div class="code">PHISHING WARNING</div>
+<h1>Deceptive site ahead</h1>
+<p>${esc(host)} is on a list of sites reported for phishing. Attackers on sites like this try to trick you into giving away passwords, card numbers or other private details.</p>
+<div class="url">${esc(url)}</div>
+<button id="back" type="button">Back to safety</button>
+<p class="small"><a id="go" href="${go}">I understand the risk, open the site anyway</a></p>
+<p class="small">Lumen checks addresses against a list stored on this computer. No address you visit is sent anywhere. A site can be listed by mistake. You can turn this off in Settings.</p>
+</main><script nonce="${n}">
+document.getElementById('back').addEventListener('click',function(){if(history.length>1)history.back();else location.href='lumen://newtab';});
+</script></body></html>`;
+}
 function renderProceed(url) {
   const n = nonce();
   return `<!doctype html><html><head><meta charset="utf-8"><title>Continuing</title>
@@ -152,4 +179,4 @@ function renderReaderDoc(doc) {
   return require('./reader').render(doc, { BASE_CSS, nonce, LOGO });
 }
 
-module.exports = { renderNewTab, renderError, renderProceed, renderWhatsNew, renderReaderDoc };
+module.exports = { renderNewTab, renderError, renderWarning, renderProceed, renderWhatsNew, renderReaderDoc };
