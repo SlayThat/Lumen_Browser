@@ -17,9 +17,17 @@ assert.strictEqual(w.shouldShow({ lastSeen: cur, current: cur, firstRun: false }
 assert.strictEqual(w.shouldShow({ lastSeen: '9.9.9', current: cur, firstRun: false }), false); // downgrade
 assert.strictEqual(w.shouldShow({ lastSeen: '0.1.0', current: '0.0.1', firstRun: false }), false); // no notes for it
 
-// every release needs a note, or the page stays silent for it
-assert.ok(w.NOTES.some(n => n.version === pkg.version), 'add a NOTES entry for ' + pkg.version + ' in src/main/whatsnew.js');
-assert.strictEqual(w.NOTES[0].version, pkg.version, 'the newest NOTES entry should be the version in package.json');
+// a release needs a note unless it is a patch release (x.y.Z) of a version that has one; patch releases stay silent
+const [maj, min] = pkg.version.split('.');
+assert.ok(w.NOTES.some(n => n.version.startsWith(maj + '.' + min + '.')), 'add a NOTES entry for ' + maj + '.' + min + '.0 in src/main/whatsnew.js');
+assert.ok(w.compare(w.NOTES[0].version, pkg.version) <= 0, 'the newest NOTES entry cannot be newer than package.json');
+// silent patch release: someone who saw 0.10.0 gets no page for 0.10.1, someone who skipped 0.10.0 still gets its notes
+w.NOTES.unshift({ version: '7.3.0', features: [{ chip: 'x', title: 'y', text: 'z', color: 1 }] });
+assert.strictEqual(w.shouldShow({ lastSeen: '7.3.0', current: '7.3.1', firstRun: false }), false);
+assert.strictEqual(w.shouldShow({ lastSeen: '7.2.0', current: '7.3.1', firstRun: false }), true);
+assert.strictEqual(w.shouldShow({ lastSeen: '7.3.1', current: '7.3.2', firstRun: false }), false);
+assert.ok(w.render('7.3.1', { BASE_CSS: '', nonce: () => 'n', csp: () => "default-src 'none'", LOGO: '' }).includes('>y<'), 'a patch version shows the notes of its release');
+w.NOTES.shift();
 
 const pages = { BASE_CSS: '', nonce: () => 'n', csp: () => "default-src 'none'", LOGO: '' };
 const html = w.render(cur, pages);

@@ -157,8 +157,10 @@ function prepare(partition, opts) {
     return ses;
   }
 
-  // Remove "Electron/x" and the app name so sites treat us like Chrome.
-  ses.setUserAgent(ses.getUserAgent().replace(/\s?Electron\/\S+/i, '').replace(/\s?lumen-browser\/\S+/i, '').replace(/\s?Lumen\/\S+/i, ''));
+  // Chrome-shaped user agent without the "Electron/x" token, plus an honest "Lumen/x" token at the end, the way Edge and
+  // Opera add "Edg/" and "OPR/". Google's sign-in rejected a user agent that claimed to be plain Chrome (reported by
+  // other Electron projects), and sites that look for "Chrome" still match.
+  ses.setUserAgent(ses.getUserAgent().replace(/\s?Electron\/\S+/i, '').replace(/\s?lumen-browser\/\S+/i, '').replace(/\s?Lumen\/\S+/i, '') + ' Lumen/' + app.getVersion());
 
   ses.setPermissionRequestHandler((wc, permission, callback, details) => {
     if (ALWAYS.has(permission)) return callback(true);
