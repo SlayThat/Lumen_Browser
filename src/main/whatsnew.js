@@ -101,11 +101,19 @@ function compare(a, b) {
 }
 // Show the page when this launch is a newer version than the one last seen and we have notes for it.
 // A brand-new install, a downgrade and a version without notes stay quiet.
+// A small fix release can ship without notes. It then stays quiet for people who already saw the newest earlier notes,
+// and anyone who skipped from further back still gets those notes.
+function newestNotes(current) {
+  let best = null;
+  for (const n of NOTES) if (compare(n.version, current) <= 0 && (!best || compare(n.version, best.version) > 0)) best = n;
+  return best;
+}
 function shouldShow({ lastSeen, current, firstRun }) {
   if (firstRun) return false;
-  if (!NOTES.some(n => n.version === current)) return false;
+  const top = newestNotes(current);
+  if (!top) return false;
   if (!lastSeen) return true; // updated from a version that did not track this
-  return compare(lastSeen, current) === -1;
+  return compare(lastSeen, top.version) === -1;
 }
 
 function esc(s) {
@@ -134,7 +142,7 @@ function oldSection(n) {
 
 // pages: { BASE_CSS, nonce, csp, LOGO } come from pages.js to keep one CSP.
 function render(current, pages) {
-  const cur = NOTES.find(n => n.version === current) || NOTES[0];
+  const cur = NOTES.find(n => n.version === current) || newestNotes(current) || NOTES[0];
   const feats = cur.features || [];
   const older = NOTES.filter(n => n !== cur && n.items);
   const n = pages.nonce();
