@@ -31,6 +31,7 @@ class Tab {
     this.upgrade = null;
     this.pwItems = [];
     this.pwAsk = null;
+    this.pwFocus = null;
     this.cssKey = null;
     this.insetGen = 0;
     this.lastGesture = 0;

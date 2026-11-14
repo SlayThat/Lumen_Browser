@@ -111,6 +111,7 @@ function register() {
 
   // ---- saved logins ----
   const pw = require('./passwords');
+  on('af:pick', (w, id) => { if (isStr(id, 40) && w.autofill) w.autofill.pick(id); });
   on('pw:answer', (w, action) => { if (['save', 'never', 'dismiss'].includes(action)) pw.answer(w, action); });
   on('pw:fill', (w, id) => { if (isStr(id, 40)) pw.fill(w, id); });
   on('pw:copy', (w, id) => { if (isStr(id, 40)) pw.copy(w, id); });

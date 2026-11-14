@@ -1,0 +1,11 @@
+:root{--fg:#0b1118;--fg2:rgba(11,17,24,.62);--hover:rgba(11,17,24,.08);--bg:#fbfcfd;--edge:rgba(11,17,24,.16);color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--fg:#f1f5f9;--fg2:rgba(241,245,249,.66);--hover:rgba(255,255,255,.12);--bg:#1c2128;--edge:rgba(255,255,255,.16);color-scheme:dark}}
+html[data-private]{--fg:#f3eefc;--fg2:rgba(243,238,252,.66);--hover:rgba(255,255,255,.14);--bg:#241a3f;--edge:rgba(214,190,255,.24);color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:transparent}
+body{font:13px/1.35 "Segoe UI Variable Text","Segoe UI",system-ui,"Ubuntu","Cantarell","Noto Sans",sans-serif;color:var(--fg);user-select:none;-webkit-user-select:none;cursor:default}
+#box{height:100%;padding:6px;background:var(--bg);border:1px solid var(--edge);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.18);overflow:hidden}
+.afi{display:flex;align-items:center;gap:10px;height:38px;padding:0 10px;border-radius:8px;width:100%}
+.afi[aria-selected="true"]{background:var(--hover)}
+.afi svg{flex:none;color:var(--fg2)}
+.afi span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

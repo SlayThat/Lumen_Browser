@@ -57,6 +57,7 @@ class Win {
     });
     this.ui.setBackgroundColor('#00000000');
     this.bw.contentView.addChildView(this.ui);
+    this.autofill = new (require('./autofill').Autofill)(this);
     const uwc = this.ui.webContents;
     this.uiId = uwc.id;
     S.uiToWin.set(uwc.id, this);
@@ -173,6 +174,7 @@ class Win {
     const full = this.isFullscreen();
     const uiH = this.uiHeight();
     const sw = this.sideW();
+    this.autofill.hide();
     this.syncSidebar(sw, h);
     this.ui.setBounds({ x: 0, y: 0, width: w, height: uiH });
     this.ui.setVisible(uiH > 0);
@@ -248,6 +250,7 @@ class Win {
       if (prev.view) this.detachView(prev.view);
     }
     this.activeId = id;
+    this.autofill.hide();
     this.pushPw(false);
     t.lastActive = Date.now();
     t.ensureAwake();
@@ -545,6 +548,7 @@ class Win {
     S.windows.delete(this);
     S.uiToWin.delete(this.uiId);
     if (this.sideId) S.uiToWin.delete(this.sideId);
+    this.autofill.dispose();
   }
 
   // ---------- settings ----------
