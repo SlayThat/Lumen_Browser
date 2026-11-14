@@ -53,6 +53,8 @@ function attach(tab, wc) {
       }
     }
     tab.win.pushPw(false);
+    // The box was clicked before the saved logins were looked up: open the dropdown now.
+    if (tab.pwFocus && tab === tab.win.active && tab.pwItems.length) tab.win.autofill.show(tab, tab.pwFocus);
   });
 
   wc.ipc.on('pw:captured', async (e, d) => {
@@ -71,8 +73,19 @@ function attach(tab, wc) {
     tab.win.pushPw(true);
   });
 
+  // The login dropdown under the box the user clicked.
+  wc.ipc.on('pw:focus', (e, r) => {
+    if (!mine(e) || !enabled() || tab !== tab.win.active || !r) return;
+    const rect = { x: +r.x, y: +r.y, w: +r.w, h: +r.h };
+    if (![rect.x, rect.y, rect.w, rect.h].every(Number.isFinite) || rect.w < 1 || rect.h < 1) return;
+    tab.pwFocus = rect;
+    tab.win.autofill.show(tab, rect);
+  });
+  wc.ipc.on('pw:blur', (e) => { if (mine(e)) { tab.pwFocus = null; tab.win.autofill.blurSoon(tab); } });
+  wc.ipc.on('pw:nav', (e, key) => { if (mine(e) && ['down', 'up', 'enter', 'esc'].includes(key) && tab === tab.win.active) tab.win.autofill.nav(key); });
+
   wc.on('did-start-navigation', (details) => {
-    if (details && details.isMainFrame && !details.isSameDocument) { tab.pwItems = []; if (tab === tab.win.active) tab.win.pushPw(false); }
+    if (details && details.isMainFrame && !details.isSameDocument) { tab.pwItems = []; tab.win.autofill.hide(); if (tab === tab.win.active) tab.win.pushPw(false); }
   });
 }
 
