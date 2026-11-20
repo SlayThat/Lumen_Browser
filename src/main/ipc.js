@@ -32,6 +32,7 @@ const SETTINGS = {
   safeBrowsing: isBool,
   passwords: isBool,
   verticalTabs: isBool,
+  glassMotion: isBool,
   bookmarksBar: isBool,
   extensions: isBool
 };

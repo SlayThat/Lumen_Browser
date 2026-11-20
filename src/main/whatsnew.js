@@ -5,6 +5,11 @@
 //
 // feature: { chip, title, text, steps?: [..], art?: 'newtab' | 'whatsnew' | 'downloads' | 'menu' | 'rows', rows?: [[label, state], ..], color: 1-4 }
 const NOTES = [
+  { version: '0.11.0', features: [
+    { chip: 'Liquid Glass motion', title: 'Glass that moves', color: 1, art: 'rows', rows: [['Active tab', 'Glass slides to it'], ['Pointer', 'Glow follows it'], ['Press', 'Squish and ripple']],
+      text: 'The toolbar now moves the way liquid glass should. A glass pill stretches and slides from one tab to the next, buttons swell and glow where your pointer is, and a soft ripple spreads when you press. It turns itself off if your system asks for reduced motion, and you can switch it off in Settings.',
+      steps: ['Click between tabs and watch the glass pill follow.', 'Move over the toolbar buttons and press one.', 'To turn it off, open Settings and switch off Liquid glass animations.'] },
+  ] },
   { version: '0.10.0', features: [
     { chip: 'Passwords', title: 'Save and fill your logins', color: 1, art: 'rows', rows: [['Saved on this computer', 'Encrypted'], ['Filled only when you pick it', 'Always'], ['Shown on screen', 'Never']],
       text: 'When you sign in to a site, Lumen offers to save the login. Logins are encrypted with your system keychain (Windows or Linux) and are never sent anywhere. Lumen fills a login only when you choose it, and only on the exact site it was saved for.',

@@ -76,7 +76,87 @@
     if (!settings) return;
     doc.dataset.mode = effectiveMode();
     applyGlassParams();
+    applyMotion();
   }
+  // Liquid glass motion: a sliding glass pill under the active tab, a glow that follows the pointer, a press ripple.
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const pill = $('tabpill');
+  let pillId = null, pillAnim = null, motionOn = false;
+  function applyMotion() {
+    const on = !!settings && settings.glassMotion !== false && !reduce.matches;
+    if (on === motionOn && doc.dataset.motion === (on ? 'on' : 'off')) return;
+    motionOn = on;
+    doc.dataset.motion = on ? 'on' : 'off';
+    if (!on && pillAnim) { pillAnim.cancel(); pillAnim = null; }
+    pillId = null;
+    pill.hidden = true;
+    renderTabs();
+  }
+  if (reduce.addEventListener) reduce.addEventListener('change', applyMotion);
+  function pillRect(el) {
+    const a = el.getBoundingClientRect(), b = pill.parentElement.getBoundingClientRect();
+    return { left: a.left - b.left, top: a.top - b.top, width: a.width, height: a.height };
+  }
+  function setPill(r) {
+    pill.style.left = r.left + 'px'; pill.style.top = r.top + 'px';
+    pill.style.width = r.width + 'px'; pill.style.height = r.height + 'px';
+  }
+  function movePill(animate) {
+    if (!motionOn) return;
+    const a = tabsEl.querySelector('[aria-selected="true"]');
+    if (!a || !a.offsetWidth) { pill.hidden = true; pillId = null; return; }
+    const to = pillRect(a);
+    const id = a.dataset.id;
+    if (!animate && pillAnim) { setPill(to); return; }
+    const first = pill.hidden || pillId === null;
+    const from = first ? null : pillRect(pill);
+    if (pillAnim) { pillAnim.cancel(); pillAnim = null; }
+    pill.hidden = false;
+    setPill(to);
+    const moved = from && (Math.abs(from.left - to.left) > 1 || Math.abs(from.width - to.width) > 1);
+    if (animate && moved && id !== pillId) {
+      const l = Math.min(from.left, to.left), rr = Math.max(from.left + from.width, to.left + to.width);
+      pillAnim = pill.animate([
+        { left: from.left + 'px', width: from.width + 'px', transform: 'scale(1,1)' },
+        { left: l + 'px', width: (rr - l) + 'px', transform: 'scale(1,.9)', offset: .45 },
+        { left: to.left + 'px', width: to.width + 'px', transform: 'scale(1,1)' }
+      ], { duration: 460, easing: 'cubic-bezier(.3,.9,.3,1)' });
+      pillAnim.onfinish = () => { pillAnim = null; poke(); };
+      poke(560);
+    } else if (animate && first) {
+      pillAnim = pill.animate([{ opacity: 0, transform: 'scale(.7)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 260, easing: 'ease-out' });
+      pillAnim.onfinish = () => { pillAnim = null; };
+      poke(340);
+    } else poke();
+    if (animate || first) pillId = id;
+  }
+  // pointer glow and press ripple on buttons and tabs
+  let glowRaf = 0, glowEv = null;
+  document.addEventListener('pointermove', (e) => {
+    if (!motionOn) return;
+    glowEv = e;
+    if (glowRaf) return;
+    glowRaf = requestAnimationFrame(() => {
+      glowRaf = 0;
+      const t = glowEv && glowEv.target && glowEv.target.closest && glowEv.target.closest('.ib,.tab');
+      if (!t) return;
+      const r = t.getBoundingClientRect();
+      t.style.setProperty('--px', (glowEv.clientX - r.left) + 'px');
+      t.style.setProperty('--py', (glowEv.clientY - r.top) + 'px');
+    });
+  }, { passive: true });
+  document.addEventListener('pointerdown', (e) => {
+    if (!motionOn || e.button !== 0) return;
+    const t = e.target.closest && e.target.closest('.ib:not(:disabled),.tab');
+    if (!t || e.target.closest('.tclose')) return;
+    const r = t.getBoundingClientRect();
+    const wrap = h('span', { class: 'rip' });
+    const dot = h('i');
+    dot.style.left = (e.clientX - r.left) + 'px'; dot.style.top = (e.clientY - r.top) + 'px';
+    wrap.append(dot); t.append(wrap);
+    const grow = Math.max(r.width, r.height) / 10 + 2;
+    dot.animate([{ transform: 'scale(.3)', opacity: .8 }, { transform: 'scale(' + grow + ')', opacity: 0 }], { duration: 620, easing: 'ease-out' }).onfinish = () => wrap.remove();
+  }, true);
   function collect() {
     const out = [];
     const els = document.querySelectorAll('[data-glass]');
@@ -98,6 +178,10 @@
   }
   function loop(now) {
     requestAnimationFrame(loop);
+    if (motionOn && dragging && !pill.hidden) {
+      const a = tabsEl.querySelector('[aria-selected="true"]');
+      if (a) { if (pillAnim) { pillAnim.cancel(); pillAnim = null; } setPill(pillRect(a)); needDraw = true; }
+    }
     if (!G.ok || doc.dataset.mode === 'off') return;
     const animating = now < animUntil;
     if (wasAnimating && !animating) needDraw = true; // one last draw in the settled state
@@ -173,6 +257,7 @@
 
   // ---------- tabs ----------
   const tabsEl = $('tabs');
+  if (window.ResizeObserver) new ResizeObserver(() => { if (!dragging) movePill(false); }).observe(tabsEl);
 
   function favNode(t) {
     if (t.loading) return h('span', { class: 'tspin' });
@@ -230,7 +315,7 @@
     el.tabIndex = sel ? 0 : -1;
     el.classList.toggle('sleeping', !!t.sleeping);
     el.classList.toggle('pinned', !!t.pinned);
-    if (sel) el.dataset.glass = '0.45'; else delete el.dataset.glass;
+    if (sel && !motionOn) el.dataset.glass = '0.45'; else delete el.dataset.glass;
     el.title = (t.sleeping ? 'Sleeping: ' : '') + t.title;
     el.querySelector('.ttitle').textContent = t.title;
     const snd = el.querySelector('.tsound');
@@ -261,6 +346,7 @@
       for (const el of tabsEl.children) el.toggleAttribute('data-narrow', el.offsetWidth < 74);
       const a = tabsEl.querySelector('[aria-selected="true"]');
       if (a) a.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+      movePill(true);
       poke();
     });
   }
@@ -1082,6 +1168,7 @@
           h('span', { class: 'srowbtns' }, actionButton('What’s new', () => L.send('tab:new', 'lumen://whatsnew')), actionButton('Check now', () => L.send('app:checkUpdate')))),
         toggle('Show bookmarks bar', null, s.bookmarksBar, 'bookmarksBar'),
         importRow(),
+        toggle('Liquid glass animations', 'A glass pill that slides between tabs, a glow that follows your pointer and a ripple when you press. Turns itself off if your system asks for reduced motion.', s.glassMotion, 'glassMotion'),
         toggle('Vertical tabs (experimental)', 'Shows your tabs in a list down the left side instead of a row on top.', s.verticalTabs, 'verticalTabs'),
         toggle('Restore tabs on launch', null, s.restoreSession, 'restoreSession'),
         h('div', { class: 'srow' }, h('div', { class: 'sl' }, 'Put background tabs to sleep after', h('small', { text: 'Sleeping tabs free their memory and reload when you open them.' })),
