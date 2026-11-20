@@ -37,6 +37,7 @@ module.exports = {
     restoreSession: true,
     adblock: true,              // block third-party ad and tracker hosts
     passwords: true,            // offer to save logins (encrypted with the system keychain)
+    glassMotion: true,          // liquid glass animations (sliding tab pill, pointer glow, press ripple)
     verticalTabs: false,        // tabs in a side list instead of the top row
     safeBrowsing: true,         // warn about known phishing sites (list checked on this PC)
     httpsFirst: true,           // try https for http:// addresses, fall back if the site has none

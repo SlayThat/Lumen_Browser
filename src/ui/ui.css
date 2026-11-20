@@ -5,7 +5,7 @@
   --tint:#f6f8fb; --solid:#eef1f6; --edge:rgba(11,17,24,.14); --sheetbg:rgba(246,248,251,.38);
   --font:"Segoe UI Variable Text","Segoe UI",system-ui,"Ubuntu","Cantarell","Noto Sans",sans-serif;
   --display:"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;
-  --strip:92px;
+  --strip:92px; --glow:rgba(255,255,255,.55);
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){
@@ -13,14 +13,14 @@
     --fg:#f1f5f9; --fg2:rgba(241,245,249,.66); --hover:rgba(255,255,255,.1); --press:rgba(255,255,255,.17);
     --field:rgba(255,255,255,.1); --accent:#6cb2ff; --accent-fg:#06121f; --danger:#ff8b7f;
     --tint:#151a21; --solid:#1b2028; --edge:rgba(255,255,255,.16); --sheetbg:rgba(21,26,33,.4);
-    color-scheme:dark;
+    --glow:rgba(255,255,255,.18); color-scheme:dark;
   }
 }
 /* Private windows are always dark with a violet tint. */
 html[data-private]{
   --fg:#f3eefc; --fg2:rgba(243,238,252,.66); --hover:rgba(255,255,255,.1); --press:rgba(255,255,255,.17);
   --field:rgba(255,255,255,.1); --accent:#c3a2ff; --accent-fg:#1a0f2e;
-  --tint:#1d1534; --solid:#241a3d; --edge:rgba(214,190,255,.22); --sheetbg:rgba(29,21,52,.45); color-scheme:dark;
+  --tint:#1d1534; --solid:#241a3d; --edge:rgba(214,190,255,.22); --sheetbg:rgba(29,21,52,.45); --glow:rgba(255,255,255,.18); color-scheme:dark;
 }
 
 *{box-sizing:border-box}
@@ -41,12 +41,12 @@ html[data-mode="off"] #glass{display:none}
 #dragzone{position:absolute;left:0;top:0;right:0;height:48px;-webkit-app-region:drag}
 #row1{position:absolute;left:10px;right:0;top:6px;height:38px;display:flex;align-items:center;gap:8px;pointer-events:none}
 #row2{position:absolute;left:10px;right:10px;top:50px;height:40px}
-#tabstrip{flex:1 1 auto;min-width:0;height:38px;border-radius:19px;display:flex;align-items:center;padding:4px;gap:2px;pointer-events:auto;-webkit-app-region:no-drag}
+#tabstrip{position:relative;flex:1 1 auto;min-width:0;height:38px;border-radius:19px;display:flex;align-items:center;padding:4px;gap:2px;pointer-events:auto;-webkit-app-region:no-drag}
 #tabs{display:flex;flex:0 1 auto;min-width:0;gap:2px;height:30px;overflow:hidden}
 #capspace{flex:none;width:var(--capw,144px);height:38px;pointer-events:none;display:flex;justify-content:flex-end;align-items:center}
 #toolbar{height:40px;border-radius:20px;display:flex;align-items:center;gap:2px;padding:4px 6px;-webkit-app-region:no-drag}
 
-.ib{width:32px;height:32px;border-radius:16px;display:grid;place-items:center;flex:none;color:var(--fg);-webkit-app-region:no-drag;transition:background .12s}
+.ib{width:32px;height:32px;border-radius:16px;display:grid;place-items:center;flex:none;position:relative;color:var(--fg);-webkit-app-region:no-drag;transition:background .12s}
 .ib:hover:not(:disabled){background:var(--hover)}
 .ib:active:not(:disabled){background:var(--press)}
 .ib:disabled{opacity:.34}
@@ -182,6 +182,22 @@ html[data-mode="off"] #sheet{background:var(--solid)!important}
 
 @media (max-width:760px){.srow input[type=range]{width:120px}#sheethead h2{font-size:17px}}
 @media (prefers-reduced-motion:reduce){.pop,.ib,.tab{transition:none}.tspin,#loadbar{animation-duration:2.4s}}
+
+/* ---- liquid glass motion ---- */
+#tabpill{position:absolute;left:0;top:4px;width:40px;height:30px;border-radius:15px;pointer-events:none;z-index:0}
+#tabs{position:relative;z-index:1}
+.glow,.ib::after,.tab::after{pointer-events:none}
+html[data-motion="on"] .ib::after,html[data-motion="on"] .tab::after{content:'';position:absolute;inset:0;border-radius:inherit;opacity:0;transition:opacity .25s;
+  background:radial-gradient(circle 46px at var(--px,50%) var(--py,50%),var(--glow),transparent 70%)}
+html[data-motion="on"] .ib:hover:not(:disabled)::after,html[data-motion="on"] .tab:hover::after{opacity:1}
+html[data-motion="on"] .ib{transition:background .12s,transform .38s cubic-bezier(.3,1.6,.5,1)}
+html[data-motion="on"] .ib:hover:not(:disabled){transform:scale(1.09)}
+html[data-motion="on"] .ib:active:not(:disabled){transform:scale(.9);transition:background .12s,transform .08s ease-out}
+html[data-motion="on"] .tab{transition:background .12s,transform .38s cubic-bezier(.3,1.6,.5,1)}
+html[data-motion="on"] .tab:active:not(.dragging){transform:scale(.975);transition:background .12s,transform .08s ease-out}
+html[data-motion="on"] .tab[aria-selected="true"]:hover{background:transparent}
+.rip{position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none}
+.rip i{position:absolute;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;background:var(--glow);pointer-events:none}
 
 /* ---- additions ---- */
 #star.on{color:var(--accent)}
